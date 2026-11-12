@@ -3,12 +3,12 @@
   "owner": {
     "name": "bzenky"
   },
-  "description": "Personal Claude Code delivery workflow plugins.",
+  "description": "Claude Code delivery workflow plugins.",
   "plugins": [
     {
       "name": "ship",
       "source": "./",
-      "description": "Personal delivery workflow: /ship:sail takes a ticket from intake to a draft PR."
+      "description": "Delivery workflow: /ship:sail takes a ticket from intake to a draft PR."
     }
   ]
 }
