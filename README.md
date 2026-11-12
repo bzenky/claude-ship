@@ -2,7 +2,7 @@
 
 # ship
 
-A Claude Code plugin that takes one ticket from intake to an open draft pull request, with
+A Claude Code plugin that takes one change, from a ticket or a plain request, to an open draft pull request, with
 stops where a human has to decide and an independent check before anything is called done.
 
 ```
@@ -14,7 +14,7 @@ INTAKE → PLAN → CHECKS → BUILD → VALIDATE → PR
 
 | Component | Invoke | What it does |
 | --- | --- | --- |
-| `sail` skill | `/ship:sail` | Runs the whole flow for one ticket |
+| `sail` skill | `/ship:sail` | Runs the whole flow for one change |
 | `verifier` agent | spawned by `sail` | One independent pass at validate time: checks that each test would fail if its claim were false, and tries to refute the code review's findings |
 
 ## How `sail` works
@@ -62,7 +62,7 @@ claude plugin marketplace add bzenky/ship
 claude plugin install ship@ship
 ```
 
-Restart the Claude Code session, then run `/ship:sail` with a ticket.
+Restart the Claude Code session, then run `/ship:sail` with a ticket or a description of the change.
 
 ## Update
 

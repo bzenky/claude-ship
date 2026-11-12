@@ -1,11 +1,11 @@
 ---
 name: sail
-description: 'Takes one ticket from intake to an open draft PR: size it, plan, freeze checks, build, validate (code-review, the-judge, one independent verifier), then open the PR. Runs tlc-spec-lean for plan/checks/build/proofs and the-judge for review; adds goal restatement, lean-code principles and evidence-labelled replies. Use when the user says "sail", "/ship:sail", "take this ticket to a PR", "plan, build, validate and open the PR", or hands over a ticket to deliver end to end. Do NOT use for reviewing someone else''s PR (use the-judge), for babysitting an open PR, or for a design doc with no ticket.'
+description: 'Takes one change, from a ticket or a plain request, to an open draft PR: size it, plan, freeze checks, build, validate (code-review, the-judge, one independent verifier), then open the PR. Runs tlc-spec-lean for plan/checks/build/proofs and the-judge for review; adds goal restatement, lean-code principles and evidence-labelled replies. Use when the user says "sail", "/ship:sail", "take this ticket to a PR", "build this and open a PR", "plan, build, validate and open the PR", or hands over a ticket or a feature/fix request to deliver end to end in an existing repo. Do NOT use for reviewing someone else''s PR (use the-judge), for babysitting an open PR, for a design doc, or for a throwaway prototype or a brand-new project that will not end in a PR.'
 ---
 
 # Sail
 
-One ticket, intake to draft PR. Sail owns the order of the stages and the stops; the stages themselves
+One change, from a ticket or a plain request, intake to draft PR. Sail owns the order of the stages and the stops; the stages themselves
 belong to the skills it calls, so read them rather than re-deriving them here.
 
 ```
@@ -33,7 +33,7 @@ missing, say which and stop: Sail without them is just improvisation.
 
 ## Habits that hold in every stage
 
-**Goal first.** Your first message on a ticket states, in your own words, the user's goal, the problem
+**Goal first.** Your first message on a change states, in your own words, the user's goal, the problem
 behind it, and the smallest change you expect to meet it. Don't wait for confirmation. If the evidence
 rules out the change that was asked for, show the evidence and stop. Open the final report with the goal
 too, and restate it in every subagent brief, because a subagent that doesn't know the goal optimises
@@ -56,7 +56,8 @@ user a check you could run yourself.
 ## 0. Intake (stop)
 
 1. If the branch or request names a ticket, fetch it (the project's tracker tool) and any business
-   rules the project's `CLAUDE.md` points to.
+   rules the project's `CLAUDE.md` points to. With no ticket, the request is the source: ask only
+   what the plan can't be written without, and name the feature folder after the change.
 2. If `.specs/STATE.md` has a `## Handoff`, name the feature it describes and ask whether to read it.
 3. Restate the goal (above).
 4. Recommend a size with one line of why, and ask the base branch the PR will target. Ask both in one
@@ -113,7 +114,7 @@ bugs, then go to PR. The review bot on the PR is the backstop.
 7. `validate_verification.py <feature>` exits 0. Open the report with its last line; a red gate is said
    first.
 
-If the ticket is a security ticket and the project defines a security gate skill, run it after step 7;
+If the change is security work and the project defines a security gate skill, run it after step 7;
 its NO-GO stops the PR.
 
 ## 5. PR (stop before push)
