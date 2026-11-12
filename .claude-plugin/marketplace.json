@@ -1,9 +1,9 @@
 {
-  "name": "ship",
+  "name": "bzenky",
   "owner": {
     "name": "bzenky"
   },
-  "description": "Claude Code delivery workflow plugins.",
+  "description": "bzenky's Claude Code plugins.",
   "plugins": [
     {
       "name": "ship",

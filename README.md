@@ -58,8 +58,8 @@ from the project's `CLAUDE.md` and your Claude Code memory, not from the plugin.
 ## Install
 
 ```sh
-claude plugin marketplace add bzenky/ship
-claude plugin install ship@ship
+claude plugin marketplace add bzenky/claude-ship
+claude plugin install ship@bzenky
 ```
 
 Restart the Claude Code session, then run `/ship:sail` with a ticket or a description of the change.
@@ -67,8 +67,8 @@ Restart the Claude Code session, then run `/ship:sail` with a ticket or a descri
 ## Update
 
 ```sh
-claude plugin marketplace update ship
-claude plugin update ship@ship
+claude plugin marketplace update bzenky
+claude plugin update ship@bzenky
 ```
 
 ## Layout
