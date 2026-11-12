@@ -20,15 +20,18 @@ names, commit style, review-bot comments, attribution lines. Sail wins over the 
 it calls where it says so below (the-judge never posts; one merged verifier). tlc-spec-lean's own rules
 hold everywhere else.
 
-## Dependencies
+## Bundled skills
 
-Find each `SKILL.md` in `<project>/.claude/skills/<name>/`, then `~/.claude/skills/<name>/`. If one is
-missing, say which and stop: Sail without them is just improvisation.
+`tlc-spec-lean` and `the-judge` ship with this plugin, beside this file. Resolve `<skills>` as the
+directory that holds this `SKILL.md`'s folder and read `<skills>/tlc-spec-lean/SKILL.md` and
+`<skills>/the-judge/SKILL.md` by path when their stage comes. Use these copies even when the project
+has its own: Sail was written against them, and another version may name its scripts or steps
+differently.
 
 | Skill | Used for |
 | --- | --- |
-| `tlc-spec-lean` | plan, checks, build, proof scripts, the Verifier's reference (`references/verify.md`) |
-| `the-judge` | the last review pass, chat only |
+| `<skills>/tlc-spec-lean` | plan, checks, build, proof scripts (`scripts/`), the Verifier's reference (`references/verify.md`) |
+| `<skills>/the-judge` | the last review pass, chat only |
 | `/code-review` (built in) | correctness pass before the judge |
 
 ## Habits that hold in every stage
@@ -39,7 +42,17 @@ rules out the change that was asked for, show the evidence and stop. Open the fi
 too, and restate it in every subagent brief, because a subagent that doesn't know the goal optimises
 for its own reading of the task.
 
-**Lean code.**
+**Lean code.** When one of these situations comes up, read its file in `references/principles/` (beside
+this file) before acting; each is short, and the bullets below are only their gist.
+
+| Situation | File |
+| --- | --- |
+| choosing a data shape, or code that branches a lot | `model-the-domain.md` |
+| sizing a diff, tempted to add a layer or an abstraction | `laziness-protocol.md` |
+| sequencing an addition, refactor or rewrite | `subtract-before-you-add.md` |
+| debugging, or a fix that adds a guard | `fix-root-causes.md` |
+| writing, changing or keeping a test | `test-behavior-not-implementation.md` |
+
 - Name the data shape before writing logic. Encode the domain in a structure (a table or registry, a
   state machine, a typed model) instead of conditionals scattered across files.
 - Subtract before you add. Delete dead weight first; the smallest change that meets the criteria wins.
@@ -103,7 +116,7 @@ bugs, then go to PR. The review bot on the PR is the backstop.
    `git diff <base>...HEAD` and treat it as round 1. Skip its Gate and Post steps. Its findings never
    go on any PR, not even later; it is the user's private check.
 4. One `ship:verifier` subagent at the same `HEAD`. Brief: the goal, the feature, the diff range, the
-   tlc-spec-lean skill directory, and the judge's findings as claims with evidence pointers (not the
+   absolute path of `<skills>/tlc-spec-lean`, and the judge's findings as claims with evidence pointers (not the
    judge's reasoning). Record it on `checks.md`'s `**Dispatched:**` line first. If a criterion cites a
    capture, tlc-spec-lean's screens subagent runs beside it; no other subagents.
 5. Spot-check any new evidence the verifier cites, then fix what it CONFIRMED and what it found, in

@@ -15,6 +15,8 @@ INTAKE → PLAN → CHECKS → BUILD → VALIDATE → PR
 | Component | Invoke | What it does |
 | --- | --- | --- |
 | `sail` skill | `/ship:sail` | Runs the whole flow for one change |
+| `tlc-spec-lean` skill (bundled) | `/ship:tlc-spec-lean` | Plan, checks, build and proof scripts that `sail` runs |
+| `the-judge` skill (bundled) | `/ship:the-judge` | Evidence-first code review that `sail` runs as its last review pass |
 | `verifier` agent | spawned by `sail` | One independent pass at validate time: checks that each test would fail if its claim were false, and tries to refute the code review's findings |
 
 ## How `sail` works
@@ -50,8 +52,6 @@ from the project's `CLAUDE.md` and your Claude Code memory, not from the plugin.
 ## Requirements
 
 - [Claude Code](https://claude.com/claude-code)
-- `tlc-spec-lean` and `the-judge` skills, installed in the project (`.claude/skills/`) or in
-  `~/.claude/skills/`. `sail` stops and names the missing one if it can't find them.
 - `gh` (GitHub CLI), authenticated, for opening the PR
 - Python 3.8+ for tlc-spec-lean's scripts
 
@@ -79,24 +79,31 @@ claude plugin update ship@ship
 ├── marketplace.json   # lets the repo be added as a marketplace
 └── icon.png           # rendered from assets/icon.svg
 agents/verifier.md
-skills/sail/SKILL.md
+skills/
+├── sail/              # the flow; references/principles/ bundled from pstack, MIT
+├── tlc-spec-lean/     # bundled, CC-BY-4.0, see NOTICE.md
+└── the-judge/         # bundled, CC-BY-4.0, see NOTICE.md
 assets/icon.svg
+NOTICE.md              # third-party credits and changes
 ```
 
 ## Credits
 
-`ship` orchestrates other people's work and borrows some of their ideas:
+`ship` bundles two skills and borrows ideas from a third. Details, versions and changes are in
+[NOTICE.md](NOTICE.md).
 
 - **tlc-spec-lean** by [Tech Leads Club](https://github.com/tech-leads-club) (CC-BY-4.0), derived
-  from tlc-spec-driven by Felipe Rodrigues. `sail` runs its plan, checks, build and verify phases and
-  their scripts.
-- **the-judge** by [Felipe Rodrigues](https://github.com/felipfr) (CC-BY-4.0). `sail` runs it as the
-  last review pass.
+  from tlc-spec-driven by Felipe Rodrigues.
+- **the-judge** by [Felipe Rodrigues](https://github.com/felipfr) (CC-BY-4.0).
 - **poteto-mode** from [pstack](https://github.com/cursor/plugins/tree/main/pstack) by Lauren Tan
-  (MIT). The goal-first, lean-code and evidence-labelled habits are adapted from it.
+  (MIT). Five of its principle files are bundled as Sail references; the goal-first and
+  evidence-labelled habits are adapted from poteto-mode.
 
-Neither skill is bundled here; install them from their authors.
+The bundled skills don't auto-trigger, so they don't compete with copies you already have; run them
+by name (`/ship:tlc-spec-lean`, `/ship:the-judge`) or through `/ship:sail`.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE), except `skills/tlc-spec-lean/` and `skills/the-judge/`, which keep their authors'
+[CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/) license, and
+`skills/sail/references/principles/`, which keeps pstack's MIT notice.
