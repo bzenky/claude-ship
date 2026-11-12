@@ -1,0 +1,10 @@
+{
+  "name": "ship",
+  "version": "0.1.0",
+  "description": "Personal delivery workflow: /ship:sail takes a ticket from intake to a draft PR over tlc-spec-lean and the-judge.",
+  "author": {
+    "name": "bzenky"
+  },
+  "license": "UNLICENSED",
+  "icon": "./.claude-plugin/icon.png"
+}
