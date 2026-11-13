@@ -52,6 +52,9 @@ this file) before acting; each is short, and the bullets below are only their gi
 | sequencing an addition, refactor or rewrite | `subtract-before-you-add.md` |
 | debugging, or a fix that adds a guard | `fix-root-causes.md` |
 | writing, changing or keeping a test | `test-behavior-not-implementation.md` |
+| wiring validation, error handling or a framework adapter | `boundary-discipline.md` |
+| a second fix on the same premise has failed the same gate | `attack-the-premise.md` |
+| about to call a step done or say something works | `prove-it-works.md` |
 
 - Name the data shape before writing logic. Encode the domain in a structure (a table or registry, a
   state machine, a typed model) instead of conditionals scattered across files.
@@ -61,6 +64,16 @@ this file) before acting; each is short, and the bullets below are only their gi
 - Test behaviour, not implementation. Assert what a user of the code can observe, so the test fails
   when that breaks and survives a refactor. Shared behaviour is tested once at its own layer; each
   host gets one wiring test.
+- Guard at the boundary. Validate where data enters the system, trust it inside, keep logic pure.
+- Attack the premise. After two failed fixes that assume the same thing, write that assumption down and
+  test it before a third.
+- Prove it works on the real artifact: run it, read the actual value. Not a proxy, not "it compiles".
+
+When a principle changed a decision, name it and the choice it changed, in the reply that reports that
+decision. Cite only files you read in this session.
+
+**No is an acceptable answer.** Asked whether to do something, invited to add scope, or shown an
+approach, give your real judgment. Decline or push back when that is true; agreement is not the default.
 
 **Evidence-labelled replies.** Short declarative sentences. Every claim carries its evidence or its
 label in the same sentence: measured (with the command or file:line), inferred, or guess. Never hand the
@@ -155,4 +168,4 @@ tests, next step).
 
 Open with the goal. Then: what changed, the size and why, what ran live (walked, probed, or handed to
 the user), the gate's last line, the judge and verifier verdicts (what was fixed, what was refuted),
-open decisions, and the PR link. Every claim labelled.
+the principles that changed a decision, open decisions, and the PR link. Every claim labelled.

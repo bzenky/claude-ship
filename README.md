@@ -5,6 +5,13 @@
 A Claude Code plugin that takes one change, from a ticket or a plain request, to an open draft pull request, with
 stops where a human has to decide and an independent check before anything is called done.
 
+> **An experiment.** `ship` is my test of merging two skills I already rely on, tlc-spec-lean
+> (plan, checks, proofs) and the-judge (evidence-first review), into one flow, guided by principles
+> borrowed from pstack's poteto-mode (goal first, lean code, prove it works, evidence-labelled
+> replies). I think they connect well and fit how I work day to day. It is shaped by that work, not
+> meant as a general tool, and it changes as I learn what holds up. Credit goes to their authors;
+> see [Credits](#credits).
+
 ```
 INTAKE → PLAN → CHECKS → BUILD → VALIDATE → PR
  stop     stop            stop per commit   stop before push
@@ -44,8 +51,9 @@ for the full ceremony:
 
 - **Goal first.** The first message and the final report state the goal, the problem behind it and
   the smallest change expected to meet it.
-- **Lean code.** Name the data shape before the logic, subtract before adding, fix root causes, and
-  test behaviour rather than implementation.
+- **Lean code.** Name the data shape before the logic, subtract before adding, fix root causes,
+  test behaviour rather than implementation, guard at boundaries, attack a premise that keeps
+  failing, and prove it works on the real artifact.
 - **Evidence-labelled replies.** Every claim is marked measured, inferred or guess.
 
 **Your conventions win.** PR title format, PR template, commit style and review-bot comments come
@@ -98,8 +106,8 @@ NOTICE.md              # third-party credits and changes
   from tlc-spec-driven by Felipe Rodrigues.
 - **the-judge** by [Felipe Rodrigues](https://github.com/felipfr) (CC-BY-4.0).
 - **poteto-mode** from [pstack](https://github.com/cursor/plugins/tree/main/pstack) by Lauren Tan
-  (MIT). Five of its principle files are bundled as Sail references; the goal-first and
-  evidence-labelled habits are adapted from poteto-mode.
+  (MIT). Eight of its principle files are bundled as Sail references; the goal-first,
+  evidence-labelled, cite-the-principle and candour habits are adapted from poteto-mode.
 
 The bundled skills don't auto-trigger, so they don't compete with copies you already have; run them
 by name (`/ship:tlc-spec-lean`, `/ship:the-judge`) or through `/ship:sail`.
