@@ -5,7 +5,7 @@ license: CC-BY-4.0
 disable-model-invocation: true
 metadata:
   author: Tech Leads Club - github.com/tech-leads-club
-  version: '2.3.0'
+  version: '2.2.0-ship.1'
 ---
 
 # Tech Lead's Club - Spec, Lean

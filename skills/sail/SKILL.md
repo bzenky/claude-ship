@@ -137,7 +137,8 @@ backstop.
    go on any PR, not even later; it is the user's private check.
 4. One `ship:verifier` subagent at the same `HEAD`. Brief: the goal, the feature, the diff range, the
    absolute path of `<skills>/tlc-spec-lean`, and the judge's findings as claims with evidence pointers (not the
-   judge's reasoning). Dispatch it only once `**Walked:**` is written, so it judges the walk too.
+   judge's reasoning). Dispatch it only once `**Walked:**` is written; the walk is the author's evidence, so the verifier
+   still reads the claims and proofs, not the Handoff.
    Record it on `checks.md`'s `**Dispatched:**` line first. If a criterion cites a
    capture, tlc-spec-lean's screens subagent runs beside it; no other subagents.
 5. Spot-check any new evidence the verifier cites, then fix what it CONFIRMED and what it found, in
@@ -157,7 +158,8 @@ Ask before `git push`. Then:
 
 - Open the PR **as a draft** against the base from intake, title and body per the project's convention
   and PR template. Fill the template; leave out empty sections and any generated-by footer.
-- Assign the user (`--assignee @me`) and post the review-bot trigger comment the user's memory names.
+- Assign the user (`--assignee @me`). If the project's `CLAUDE.md` or the user's memory names a
+  review-bot trigger comment, post it; otherwise skip this step.
 - The Testing section is click-through steps for the reviewing developer, not a list of automated tests.
   Write it from `**Walked:**`: the same steps and requests, with what the reviewer should see.
 

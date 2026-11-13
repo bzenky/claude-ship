@@ -8,7 +8,8 @@ does not apply to them.
 - **Path:** `skills/tlc-spec-lean/`
 - **Author:** Tech Leads Club, https://github.com/tech-leads-club. Derived by its authors from
   tlc-spec-driven 3.3.0 (Felipe Rodrigues), tlc-plan and tlc-implement.
-- **Version bundled:** 2.2.0, changed here and marked 2.3.0
+- **Source:** https://github.com/tech-leads-club/agent-skills/tree/main/packages/skills-catalog/skills/%28development%29/tlc-spec-lean
+- **Version bundled:** 2.2.0, changed here and marked `2.2.0-ship.1` (not an upstream release)
 - **License:** CC-BY-4.0, https://creativecommons.org/licenses/by/4.0/
 - **Changes:**
   - `disable-model-invocation: true` added to the `SKILL.md` frontmatter, so the bundled copy runs
@@ -23,6 +24,7 @@ does not apply to them.
 
 - **Path:** `skills/the-judge/`
 - **Author:** Felipe Rodrigues, https://github.com/felipfr
+- **Source:** https://github.com/tech-leads-club/agent-skills/tree/main/packages/skills-catalog/skills/%28quality%29/the-judge
 - **Version bundled:** 1.4.0
 - **License:** CC-BY-4.0, https://creativecommons.org/licenses/by/4.0/
 - **Changes:** `disable-model-invocation: true` added to the `SKILL.md` frontmatter, as above.
