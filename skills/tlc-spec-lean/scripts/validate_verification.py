@@ -17,7 +17,8 @@ What it checks:
            screens.md, a row in it that does not read `matches`, a cited capture with no
            `<capture>.running.png`, or a picture at another size than its capture (1x, 2x, 3x pass)
   ERROR  - a browser proof that names no `.running.png`, or one that is not on disk
-  ERROR  - a `walk` proof and no `**Walked:**` line in the Handoff
+  ERROR  - a `walk` proof, a screen criterion or a Surface route, and no `**Walked:**` line in the
+           Handoff, or one that is empty or a placeholder
   ERROR  - plan.md with no `**Approved**: <date> - user: "<their words>"` line
   ERROR  - screens.md with no `**Round**:` line or past round 2, no `**HEAD**`, or code changed after
            the HEAD it judged
@@ -37,7 +38,7 @@ import re
 import subprocess
 import sys
 
-from lean_config import _section, plan_approved, plan_marks_binding, plan_owes_pictures
+from lean_config import _section, plan_approved, plan_marks_binding, plan_owes_pictures, plan_owes_walk
 
 PROOF_RE = re.compile(r"^\**\s*Proof\s*\**\s*:\s*(.+)$", re.IGNORECASE)
 RUNNING_SUFFIX = ".running.png"
@@ -252,14 +253,25 @@ def _screens_verdicts(fdir, name):
     return errors
 
 
-def _walk_logged(checks_lines, name):
-    """A `walk` proof's evidence is the author's `**Walked:**` line; with none, nothing was visited."""
+def _walk_logged(checks_lines, plan, name):
+    """A walk's evidence is the author's `**Walked:**` line. It is owed by a `walk` proof, a screen
+    someone reaches, or a route someone calls; with none, or a placeholder, nothing was visited."""
     walks = [ln for ln in checks_lines
              if (m := PROOF_RE.match(ln.strip())) and WALK_PROOF_RE.match(m.group(1).strip())]
-    if walks and not any(WALKED_RE.match(ln) for ln in _section(checks_lines, "Handoff")):
+    if not walks and not plan_owes_walk(plan, checks_lines):
+        return []
+    why = "a `walk` proof" if walks else "the plan names a screen or a route"
+    logged = [ln[m.end():].strip(" *") for ln in _section(checks_lines, "Handoff") if (m := WALKED_RE.match(ln))]
+    if not logged:
         return [
-            f"{name}: checks.md has a `walk` proof but its `## Handoff` has no `**Walked:**` line - "
-            f"the visit the proof names is not on record"
+            f"{name}: {why} but `## Handoff` has no `**Walked:**` line - open the running app and probe "
+            f"each route, then write what you did and what came back"
+        ]
+    if not any(t and not t.startswith(("<", "[")) and t.lower().rstrip(".") not in ("none", "n/a", "-", "tbd")
+               for t in logged):
+        return [
+            f"{name}: {why} but the `**Walked:**` line is empty or a placeholder - write what you did "
+            f"in the running app and what came back"
         ]
     return []
 
@@ -394,7 +406,7 @@ def _check_feature(fdir, name):
     if plan_owes_pictures(plan, checks_lines):
         errors += _screens_verdicts(fdir, name)
         errors += _screen_evidence(fdir, plan, name)
-    errors += _walk_logged(checks_lines, name)
+    errors += _walk_logged(checks_lines, plan, name)
     return errors, warnings
 
 

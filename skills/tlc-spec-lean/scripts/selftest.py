@@ -129,9 +129,23 @@ CASES = [
          "3. `Billing::StatusMap` (new) - provider status -> local status",
          "3. `Billing::StatusMapFactory` - provider status -> local status"),
      0, "without marking it as existing or as a"),
-    ("validate_checks", "plan.md", "a route reviewed in the plan that no check mentions (warn)",
+    ("validate_checks", "plan.md", "a route reviewed in the plan that no check mentions",
      lambda s: s.replace("`POST /webhooks/provider`", "`POST /webhooks/provider/v2`"),
-     0, "owe a Coverage row, or the route is dead"),
+     1, "owe a Coverage row, or the route is dead"),
+    ("validate_checks", "checks.md", "a Surface route no walk proof probes",
+     lambda s: s.replace("Proof: walk - probe `POST /webhooks/provider` signed and unsigned against the local server",
+                         'Proof: `bin/rails test test/webhooks/ingest_test.rb -n "/signed_and_unsigned/"`'),
+     1, "no `walk` proof probes it"),
+    ("validate_checks", "plan.md", "a GraphQL operation in Surface no walk proof probes",
+     lambda s: s.replace("anything else gets `401` |\n",
+                         "anything else gets `401` |\n| `POST /graphql` mutation `pauseSubscription` | `id` | `{status}` | `200`, `403` | the owner; anyone else gets `403` |\n", 1),
+     1, "names `pauseSubscription` but no `walk` proof probes it"),
+    ("validate_verification", "checks.md", "a route in the plan and no Walked line",
+     lambda s: without_probe(s),
+     1, "the plan names a screen or a route but `## Handoff` has no `**Walked:**` line"),
+    ("validate_verification", "checks.md", "a Walked line left as the template placeholder",
+     lambda s: re.sub(r"- \*\*Walked:\*\*[^\n]*", "- **Walked:** <what you did, what came back>", s),
+     1, "is empty or a placeholder"),
 
     ("validate_plan", "plan.md", "acceptance criterion with no SHALL",
      lambda s: s.replace("THEN the system SHALL set the subscription status", "THEN we set the subscription status"),
@@ -280,6 +294,24 @@ def with_walk_proof(s):
     return s.replace("\n## Coverage", "\nProof: walk - open Items from the nav\n\n## Coverage", 1)
 
 
+def without_walked(s):
+    return re.sub(r"\n- \*\*Walked:\*\*[^\n]*\n", "\n", s)
+
+
+def without_probe(s):
+    """checks.md with no route probe and no walk: the shape of a backend-only feature."""
+    s = re.sub(r"\n\*\*C13\*\*[^\n]*\nProof: walk[^\n]*\n", "\n", s)
+    return without_walked(s)
+
+
+def without_surface(s):
+    return re.sub(r"## Surface\n.*?\n## Landing", "## Surface\n\nNone - nothing consumed outside\n\n## Landing",
+                  s, flags=re.S)
+
+
+GESTURE_AC = "8. WHEN a member clicks Retry payment THEN the system SHALL charge the card again\n"
+
+
 def with_walked(s):
     return s.replace("## Handoff\n", "## Handoff\n\n- **Walked:** opened Items from the nav, the list showed\n", 1)
 
@@ -356,8 +388,16 @@ MULTI_CASES = [
       "captures/billing--card-form.jpg": lambda s: "jpg", "screens.md": screens_md("matches")},
      1, "has no `billing--card-form.running.png`"),
     ("validate_verification", "a walk proof with no Walked line in the Handoff",
-     {"checks.md": with_walk_proof},
+     {"checks.md": lambda s: with_walk_proof(without_walked(s))},
      1, "no `**Walked:**` line"),
+    ("validate_verification", "a gesture criterion with no capture and no Walked line",
+     {"plan.md": lambda s: without_surface(s).replace(LAST_AC, LAST_AC + GESTURE_AC, 1), "checks.md": without_probe},
+     1, "the plan names a screen or a route but `## Handoff` has no `**Walked:**` line"),
+    ("validate_verification", "a criterion naming a modal and no Walked line",
+     {"plan.md": lambda s: without_surface(s).replace(
+         LAST_AC, LAST_AC + "8. IF the charge fails again THEN the system SHALL keep the modal with `Card declined`\n", 1),
+      "checks.md": without_probe},
+     1, "the plan names a screen or a route but `## Handoff` has no `**Walked:**` line"),
     ("validate_verification", "screens.md with no Round line",
      judged_capture("**HEAD**: 0a1b2c3\n"),
      1, "no `**Round**:` line"),
@@ -466,6 +506,10 @@ NEGATIVE_CONTROLS = [
       "checks.md": with_browser_shot("screens/billing.running.png"), RUNNING: lambda s: "png"}),
     ("validate_verification", "a screen judged in screens.md is accepted",
      {"plan.md": with_screen, "screens.md": screens_md("matches"), RUNNING: lambda s: "png"}),
+    ("validate_verification", "a backend change with no route and no screen owes no walk",
+     {"plan.md": without_surface, "checks.md": without_probe}),
+    ("validate_checks", "a plan with no route owes no probe",
+     {"plan.md": without_surface, "checks.md": without_probe}),
     ("validate_checks", "a walk proof needs no test selector and no picture",
      {"checks.md": with_walk_proof}, "names no test selector"),
     ("validate_verification", "a walk proof with its visit in the Walked line is accepted",

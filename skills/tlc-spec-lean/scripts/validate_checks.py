@@ -34,6 +34,7 @@ What it checks:
   ERROR  - an `n/a` swept landing with no reason after it
   ERROR  - a check id referenced in Coverage or Swept that is not defined
   ERROR  - a plan criterion cites a binding capture and no check proving it cites that capture
+  ERROR  - a route in plan.md's Surface (a path, or a GraphQL operation) that no `walk` proof names
   WARN   - a route in plan.md's Surface that nothing here mentions
   WARN   - a proof that names no test selector (a whole suite settles no single claim; `browser`,
            `walk` and `run` proofs are exempt - a run proof's expected line is its selector)
@@ -62,7 +63,7 @@ import os
 import re
 import sys
 
-from lean_config import RUN_PROOF_RE, plan_approved, plan_marks_binding, read_runs
+from lean_config import RUN_PROOF_RE, plan_approved, plan_marks_binding, plan_routes, read_runs
 
 REQUIRED_SECTIONS = ["Checks", "Coverage", "Swept"]
 
@@ -75,7 +76,6 @@ CAPTURE_RE = re.compile(r"`([^`\s]+\.(?:png|jpe?g|webp|gif))`", re.IGNORECASE)
 CID_RE = re.compile(r"\bC\d+\b")
 PLACEHOLDER_RE = re.compile(r"^\s*[\[<].+[\]>]\s*$")
 SIZE_RE = re.compile(r"\((\d+)\s*(?:[a-z\- ]+)?\)")
-ROUTE_RE = re.compile(r"(/[A-Za-z0-9_\-/:{}.]*)")
 TABLE_DRIVEN_RE = re.compile(r"table[- ]driven", re.IGNORECASE)
 
 SELECTOR_TOKENS = (
@@ -233,20 +233,6 @@ def _plan_lines(checks_path):
         return []
     with open(plan, "r", encoding="utf-8") as f:
         return strip_fences(f.read().splitlines())
-
-
-def plan_routes(checks_path):
-    """Route paths named in the sibling plan.md's Surface table, if there is one."""
-    lines = _plan_lines(checks_path)
-    routes = []
-    for r in table_rows(lines, section_bounds(lines, "Surface")):
-        cells = split_row(r)
-        if not cells or PLACEHOLDER_RE.match(cells[0]):
-            continue
-        m = ROUTE_RE.search(cells[0])
-        if m:
-            routes.append(m.group(1))
-    return routes
 
 
 def plan_screen_captures(checks_path):
@@ -415,11 +401,21 @@ def check_file(path):
     # The derivation. checks.md is derived from plan.md, so a route reviewed there with
     # nothing pointing back at it here is either dead or unproven - and the plan naming it
     # is what makes it look covered.
-    for route in plan_routes(path):
+    # Tests reach a route through a harness; a probe reaches it through the running service, with
+    # its real config, auth and data. Each route owes one `walk` proof that names it.
+    walks = [m.group(1) for ln in lines
+             if (m := PROOF_RE.match(ln.strip())) and re.match(r"^`?walk\b", m.group(1).strip(), re.IGNORECASE)]
+    for route in plan_routes(_plan_lines(path)):
         if route not in "\n".join(lines):
             warnings.append(
                 f"plan.md's Surface names `{route}` but nothing here mentions it - its statuses "
                 f"owe a Coverage row, or the route is dead"
+            )
+        if not any(route in w for w in walks):
+            errors.append(
+                f"plan.md's Surface names `{route}` but no `walk` proof probes it - add a check whose "
+                f"proof is `walk - probe {route} ...`: one live request to the running service as an "
+                f"allowed caller and one as a refused caller, logged on `**Walked:**`"
             )
 
     # A screen criterion points at a capture; its check has to keep pointing there. A check that

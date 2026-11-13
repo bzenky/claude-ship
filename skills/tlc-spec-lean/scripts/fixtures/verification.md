@@ -20,6 +20,7 @@
 | C10 | `test/webhooks/dispatch_test.rb` `test_dispatches_every_event_type` | yes |
 | C11 | `test/billing/dunning_test.rb` `test_provider_timeout_is_inert` | yes |
 | C12 | `test/webhooks/ingest_test.rb` `test_unsigned_delivery_is_401` | yes |
+| C13 | walk - the `**Walked:**` line shows both requests and their statuses | yes |
 
 ## Findings
 

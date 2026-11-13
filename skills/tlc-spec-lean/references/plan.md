@@ -184,7 +184,8 @@ When stored data changes, the `erDiagram` also carries the one-way constraints `
 ## Surface - the signature
 
 Only a route this adds or whose signature changes: route, what goes in, what comes out, statuses,
-and who may call it. The statuses include what a caller who may not call gets (redirect, 401, 403
+and who may call it. A GraphQL operation is written `` `POST /graphql` mutation `<name>` `` (or
+`query`), one row each, so its probe can name it. The statuses include what a caller who may not call gets (redirect, 401, 403
 or 404); `Who: anyone` owes none. No check numbers here. `None - nothing consumed outside` is
 complete.
 

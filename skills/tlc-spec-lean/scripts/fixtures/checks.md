@@ -6,7 +6,7 @@ Plan: `.specs/features/billing/plan.md`
 
 ## Intent
 
-12 checks in 2 slices · 2 one-way doors · 0 open
+13 checks in 2 slices · 2 one-way doors · 0 open
 
 ## Checks
 
@@ -50,6 +50,9 @@ Proof: run billing | test_provider_timeout_is_inert = .
 **C12** - A delivery with no valid signature returns `401` and persists nothing (BILL-02, AC 7)
 Proof: `bin/rails test test/webhooks/ingest_test.rb -n "/unsigned_delivery_is_401/"`
 
+**C13** - On the running app, a signed `charge_failed` delivery returns `200` and suspends the subscription, and an unsigned one returns `401` (BILL-02, AC 5, AC 7)
+Proof: walk - probe `POST /webhooks/provider` signed and unsigned against the local server
+
 ## Coverage
 
 | Set (size) | Member -> proof | Unproven |
@@ -76,3 +79,5 @@ Proof: `bin/rails test test/webhooks/ingest_test.rb -n "/unsigned_delivery_is_40
 - observability: C3
 
 ## Handoff
+
+- **Walked:** probed `POST /webhooks/provider` on the local server with a signed `charge_failed` delivery: `200 {}`, subscription read back `suspended`; the same body unsigned: `401`, no row written

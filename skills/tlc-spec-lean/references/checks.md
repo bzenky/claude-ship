@@ -78,7 +78,10 @@ unseen. One table-driven proof over the whole set may stand for it, with the siz
 Walk it from the sets, not from the checks: the doors in `Landing`, the decision tables in the code,
 the input space behind a claim, anything enumerated in prose.
 
-- **Every route in `Surface` owes a row**, and its members are the statuses.
+- **Every route in `Surface` owes a row**, and its members are the statuses. It also owes one
+  check whose proof is a `walk` probe naming the route - the path, or the GraphQL operation name -
+  run against the running app ([build.md](build.md)); `validate_checks.py` fails a route no probe
+  names.
 - **A binding source's controls are a set.** Its members are the controls each capture draws,
   minus what `## Differences from the source` removes, each beside a check whose proof performs the
   gesture. The capture says how it looks; the proof says it works.
@@ -106,6 +109,9 @@ feature does not change, reached through the nav: the author's `**Walked:**` lin
 ```markdown
 **C41** - The nav still opens Items (AC 2)
 Proof: walk - open Items from the nav
+
+**C42** - On the running app, `POST /webhooks/provider` returns `200` signed and `401` unsigned (AC 5, AC 7)
+Proof: walk - probe `POST /webhooks/provider` signed and unsigned
 ```
 
 ## Swept - the nine dimensions
@@ -194,7 +200,7 @@ Proof: `bin/rails test test/billing/status_map_test.rb -n "/every_provider_statu
 - **Dispatched:** <each sub-agent before it is sent: Verifier, screens round 1 or 2 - at which `HEAD`, and `returned` when it is back>
 - **Boundary:** C1-C7 closed at `<sha>`
 - **Abandoned:** <tried, discarded, and why>
-- **Walked:** <only with a screen: what you did, what the page showed, how the user reaches each state, and each visit a `walk` check names>
+- **Walked:** <with a screen or a route: what you did, what the page showed, how the user reaches each state; each probe's request, caller, status and the response or stored state it checked; each visit a `walk` check names>
 ````
 
 With no plan.md, add `## Out of scope` with the excluded capabilities and why.

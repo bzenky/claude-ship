@@ -3,7 +3,7 @@
 **HEAD**: e4f5a6b
 **Tree**: clean
 **Shell**: /bin/sh
-**Result**: 13 pass, 0 fail
+**Result**: 14 pass, 0 fail
 
 | Check | Proof | Result |
 | --- | --- | --- |
@@ -19,6 +19,7 @@
 | C10 | `bin/rails test test/webhooks/dispatch_test.rb -n "/dispatches_every_event_type/"` | pass |
 | C11 | `run billing / test_provider_timeout_is_inert = .` | pass |
 | C12 | `bin/rails test test/webhooks/ingest_test.rb -n "/unsigned_delivery_is_401/"` | pass |
+| C13 | `walk - probe POST /webhooks/provider signed and unsigned against the local server` | pass (Walked) |
 | Build | `bin/rubocop app/billing` | pass |
 
 ## Output

@@ -32,6 +32,8 @@ for the full ceremony:
 
 **The full gate**, in order, each step on the code the previous one left:
 
+0. The change has run live during the build: each screen opened and used, and each added or
+   changed route probed against the local app as an allowed and a refused caller.
 1. Every check's proof passes at `HEAD` (tlc-spec-lean's `check_proofs.py`).
 2. `/code-review medium` for correctness bugs (`high` for money, auth, migrations, data).
 3. `the-judge` over the local branch, results in chat only, never posted.

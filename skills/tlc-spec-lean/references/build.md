@@ -57,12 +57,19 @@ Outside the plan's scope, do not touch it: surface a bug, note an improvement. I
 is missing: what a control needs to work for real is the work even when no check names it. Pushes
 and deploys: [SKILL.md](../SKILL.md) rule 8.
 
-## Before you stop (features with a screen)
+## Before you stop (a screen or a route)
 
-Green proofs do not show that a person can do what the plan promised, or that the screen looks like
-what was asked for. Open the running app and do what the plan promises as the user would, screens
-that share the state you changed included. If you cannot reach the app, hand the
-steps to the user.
+Green proofs do not show that a person can do what the plan promised, that the screen looks like
+what was asked for, or that a route answers once the real app is running. Start the app as the
+project's docs say and do what the plan promises as the user would, screens that share the state
+you changed included. If you cannot reach the app, hand the steps to the user.
+
+Probe each route `Surface` adds or changes against the running service: one request as a caller it
+allows and one as a caller it refuses, with a real token from the project's own sign-in, not a
+forged one. Write on `**Walked:**` the request, who sent it, the status and the part of the response
+or the stored state the claim is about. A probe that disagrees with a green test is a missing
+obligation, handled as below. Probe nothing outside the plan; the probe is evidence, not
+exploration.
 
 Save each state a capture draws beside it as `<capture>.running.png`, taken in a browser window at
 the capture's size - its pixel size over its scale - so the page lays out as the capture does; an
@@ -70,6 +77,9 @@ image resized afterwards does not. Name the file in the proof. It matches the ca
 what `## Differences from the source` lists. A state no capture draws gets no picture; a `walk`
 check is a visit you name in the `**Walked:**` line, which also says how the user reaches each
 state.
+
+With no `plan.md`, nothing lists the routes for you: each entry point the change adds or changes
+still gets its probe and its `walk` check.
 
 Something broken that a check covers is a red proof you missed: fix it. Something broken that no
 check covers is a missing obligation: append a check with its proof, say so, then fix it. A
@@ -79,7 +89,7 @@ difference from a capture is fixed, not turned into a check.
 
 What the user settles while you build goes on the `**Settled mid-build:**` line in the turn they
 say it, in their words - a compaction drops the chat, not the file. When you stop, append to
-`## Handoff` in `checks.md`: boundary, what was abandoned, the walk. Report checks closed, commit
+`## Handoff` in `checks.md`: boundary, what was abandoned, the walk and the probes. Report checks closed, commit
 hashes, proof results and deviations.
 
 Run `python3 <skill-dir>/scripts/check_proofs.py <feature>`; a red row goes back to the build. Then,

@@ -1,6 +1,6 @@
 {
   "name": "ship",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Delivery workflow: /ship:sail takes a ticket or a request from intake to a draft PR over tlc-spec-lean and the-judge.",
   "author": {
     "name": "bzenky"

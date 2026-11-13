@@ -1,8 +1,9 @@
 """
 lean_config.py - what a feature's artifacts say the Verifier owes, read the same way by every gate.
 
-Two facts decide it: whether the feature has a screen (the screen comparison), and whether plan.md's
-`## Sources` marks a source binding (the binding-source comparison). The shape of a `Run` group and
+Three facts decide it: whether the feature has a screen (the screen comparison and the walk), which
+routes plan.md's `## Surface` adds or changes (a live probe each), and whether plan.md's `## Sources`
+marks a source binding (the binding-source comparison). The shape of a `Run` group and
 of a proof that reads one lives here too. validate_checks.py, validate_verification.py and
 check_proofs.py act on these, so they live in one place - two copies of the same rule drift until
 one gate demands what the other does not.
@@ -17,7 +18,16 @@ RUN_PROOF_RE = re.compile(r"^run\s+([\w-]+)\s*\|\s*(.*)$", re.IGNORECASE)
 BINDING_RE = re.compile(r"(?<![-\w])binding\b", re.IGNORECASE)
 NOT_BINDING_RE = re.compile(r"\b(non|not)[- ]binding\b", re.IGNORECASE)
 CAPTURE_RE = re.compile(r"`([^`\s]+\.(?:png|jpe?g|webp|gif))`", re.IGNORECASE)
-SCREEN_CRITERION_RE = re.compile(r"\bSHALL\s+(?:NOT\s+)?(?:show|display|render|hide)\b", re.IGNORECASE)
+SCREEN_CRITERION_RE = re.compile(
+    r"\bSHALL\s+(?:NOT\s+)?(?:show|display|render|hide|list|highlight|enable|disable|focus|open|navigate)\b",
+    re.IGNORECASE)
+GESTURE_RE = re.compile(
+    r"\bWHEN\b[^,]*?\b(?:clicks?|taps?|selects?|chooses?|drags?|drops?|hovers?|scrolls?|presses?|types?|toggles?)\b",
+    re.IGNORECASE)
+SCREEN_NOUN_RE = re.compile(r"\b(?:page|screen|modal|dialog|button|dropdown|tooltip|toast|sidebar)s?\b", re.IGNORECASE)
+ROUTE_RE = re.compile(r"(/[A-Za-z0-9_\-/:{}.]*)")
+GRAPHQL_OP_RE = re.compile(r"\b(?:query|mutation|subscription)\s+`?([A-Za-z_]\w*)", re.IGNORECASE)
+PLACEHOLDER_RE = re.compile(r"^\s*[\[<].+[\]>]\s*$")
 PROOF_RE = re.compile(r"^\**\s*Proof\s*\**\s*:\s*`?browser\b", re.IGNORECASE)
 CRITERION_RE = re.compile(r"^\s*\d+\.\s+(.*)$")
 APPROVED_RE = re.compile(
@@ -67,11 +77,13 @@ def plan_criteria(plan_lines):
 def plan_has_screen(plan_lines, checks_lines=()):
     """True when the feature puts a screen in front of a user.
 
-    A criterion that cites a capture or says the system SHALL show, display, render or hide
-    something is a screen criterion; so is a `browser` proof in checks.md.
+    A criterion that cites a capture, says the system SHALL show, display, list, open... something,
+    has someone click, select, drag or type, or names a page, screen, modal or button is a screen
+    criterion; so is a `browser` proof in checks.md. A false positive costs one walk; a miss ships
+    a screen nobody opened.
     """
     for text in plan_criteria(plan_lines):
-        if CAPTURE_RE.search(text) or SCREEN_CRITERION_RE.search(text):
+        if any(r.search(text) for r in (CAPTURE_RE, SCREEN_CRITERION_RE, GESTURE_RE, SCREEN_NOUN_RE)):
             return True
     return any(PROOF_RE.match(s.strip()) for s in checks_lines)
 
@@ -82,6 +94,29 @@ def plan_owes_pictures(plan_lines, checks_lines=()):
     if any(CAPTURE_RE.search(text) for text in plan_criteria(plan_lines)):
         return True
     return any(PROOF_RE.match(s.strip()) for s in checks_lines)
+
+
+def plan_routes(plan_lines):
+    """Each route plan.md's `## Surface` table names: the GraphQL operation when the row names one,
+    since every operation shares one path, else the path."""
+    routes = []
+    for s in _section(plan_lines, "Surface"):
+        if not s.startswith("|"):
+            continue
+        cells = [c.strip() for c in s.strip("|").split("|")]
+        first = cells[0] if cells else ""
+        if not first or first.lower() == "route" or set(first) <= set("-: ") or PLACEHOLDER_RE.match(first):
+            continue
+        m = GRAPHQL_OP_RE.search(first) or ROUTE_RE.search(first)
+        if m:
+            routes.append(m.group(1))
+    return routes
+
+
+def plan_owes_walk(plan_lines, checks_lines=()):
+    """True when green tests are not enough: a person reaches a screen, or a caller reaches a route.
+    The author then opens the running app or probes the running service and logs it on `**Walked:**`."""
+    return plan_has_screen(plan_lines, checks_lines) or bool(plan_routes(plan_lines))
 
 
 def plan_marks_binding(plan_lines):

@@ -102,10 +102,17 @@ XS skips both phases.
 Run tlc-spec-lean's Build phase. Ask before every `git commit`; an approved plan authorises edits, not
 commits. Before each commit, strip comments that restate the code: keep only a non-obvious why.
 
+The build is not done until the change has run live: tlc-spec-lean's walk for each screen and probe
+for each route the change adds or changes are on `checks.md`'s `**Walked:**` line (its rule 12 and
+`references/build.md`). Start the app the way the project's `CLAUDE.md` says; if it cannot start, hand
+the user the steps and the exact requests and say so.
+
 ## 4. Validate
 
-**XS:** run the project's tests for the touched files, then `/code-review low` (chat only). Fix real
-bugs, then go to PR. The review bot on the PR is the backstop.
+**XS:** run the project's tests for the touched files, then `/code-review low` (chat only). If the
+change reaches a screen or a route, look at it in the running app or send it one request, and say
+what came back; no file, no gate. Fix real bugs, then go to PR. The review bot on the PR is the
+backstop.
 
 **S, M/L:** in this order, each step on the code the previous one left.
 
@@ -117,7 +124,8 @@ bugs, then go to PR. The review bot on the PR is the backstop.
    go on any PR, not even later; it is the user's private check.
 4. One `ship:verifier` subagent at the same `HEAD`. Brief: the goal, the feature, the diff range, the
    absolute path of `<skills>/tlc-spec-lean`, and the judge's findings as claims with evidence pointers (not the
-   judge's reasoning). Record it on `checks.md`'s `**Dispatched:**` line first. If a criterion cites a
+   judge's reasoning). Dispatch it only once `**Walked:**` is written, so it judges the walk too.
+   Record it on `checks.md`'s `**Dispatched:**` line first. If a criterion cites a
    capture, tlc-spec-lean's screens subagent runs beside it; no other subagents.
 5. Spot-check any new evidence the verifier cites, then fix what it CONFIRMED and what it found, in
    commits. Report the judge result and the verifier's verdict table together.
@@ -138,11 +146,13 @@ Ask before `git push`. Then:
   and PR template. Fill the template; leave out empty sections and any generated-by footer.
 - Assign the user (`--assignee @me`) and post the review-bot trigger comment the user's memory names.
 - The Testing section is click-through steps for the reviewing developer, not a list of automated tests.
+  Write it from `**Walked:**`: the same steps and requests, with what the reviewer should see.
 
 Then ask once whether to write a `## Handoff` into `.specs/STATE.md` (PR state, pending reviews, flaky
 tests, next step).
 
 ## Final report
 
-Open with the goal. Then: what changed, the size and why, the gate's last line, the judge and verifier
-verdicts (what was fixed, what was refuted), open decisions, and the PR link. Every claim labelled.
+Open with the goal. Then: what changed, the size and why, what ran live (walked, probed, or handed to
+the user), the gate's last line, the judge and verifier verdicts (what was fixed, what was refuted),
+open decisions, and the PR link. Every claim labelled.

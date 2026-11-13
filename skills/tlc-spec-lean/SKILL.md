@@ -5,7 +5,7 @@ license: CC-BY-4.0
 disable-model-invocation: true
 metadata:
   author: Tech Leads Club - github.com/tech-leads-club
-  version: '2.2.0'
+  version: '2.3.0'
 ---
 
 # Tech Lead's Club - Spec, Lean
@@ -76,6 +76,11 @@ These hold even if no reference file is read. Each one lives here; the reference
     `**Dispatched:**` line of `checks.md` `## Handoff` before it is sent. After a compaction or in a
     new session, re-read this file and the current phase's reference, then resume from the files
     ([memory.md](references/memory.md)).
+12. **What a person or a caller reaches is exercised live.** Green tests run through a harness; the
+    walk runs through the app as it starts locally, with its real config, auth and data. A screen
+    is opened and used. Each route `Surface` adds or changes is probed once as a caller it allows
+    and once as one it refuses. Both go on the `**Walked:**` line with what came back
+    ([build.md](references/build.md)).
 
 ## Who checks what
 
@@ -110,7 +115,7 @@ For a change under roughly three files with no one-way door, write only `checks.
 | --- | --- | --- |
 | Plan | problem, shape, surface, doors, criteria; the one default stop for a human | [plan.md](references/plan.md) |
 | Checks | claims with proofs, every set joined member by member, the nine dimensions swept | [checks.md](references/checks.md) |
-| Build | tests from the checks, the code, commits, the screens walked and saved | [build.md](references/build.md) |
+| Build | tests from the checks, the code, commits, the screens walked and saved, the routes probed | [build.md](references/build.md) |
 | Verify | rule 5 | [verify.md](references/verify.md), [verify-screens.md](references/verify-screens.md) |
 
 Decisions and lessons: [memory.md](references/memory.md).
@@ -145,6 +150,7 @@ mutant to be killed; the fixtures are also a worked example of a passing artifac
 | sub-agents | the Verifier and the screens sub-agent | run their file in a new session and write `self-verified`; the gate warns |
 | a model that reads images | the screens sub-agent | hand the pictures and the captures to the user |
 | a browser the agent can drive | saving `<capture>.running.png` and the walk | hand the steps to the user |
+| the app running locally, as the project's docs start it | the walk and the route probes | hand the steps and the exact requests to the user |
 
 Test runners: none is built in. `check_proofs.py` runs the commands `checks.md` names as the
 project runs them, one at a time, with no timeout; a run's own parallelism is whatever the project
