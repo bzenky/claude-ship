@@ -105,6 +105,8 @@ Run tlc-spec-lean's Plan and Checks phases as its references say, with these add
 - In the plan, name the data shape and its organising structure before the path.
 - When a question is a fact you could observe by running something (behaviour, output, layout), run a
   throwaway sketch and let the result answer it. Ask the user only for product or preference calls.
+  When the change maps another service's response to something the user sees, read what that service
+  actually returns at that moment before writing the branch.
 - Propose the trimmed test list with the checks, before writing any test: one proof may settle several
   checks that share a setup.
 
@@ -122,34 +124,40 @@ the user the steps and the exact requests and say so.
 
 ## 4. Validate
 
-**XS:** run the project's tests for the touched files, then `/code-review low` (chat only). If the
+**XS:** run the project's tests for the touched files, plus the shared-output search in step 2 below
+if the change touches shared code, then `/code-review low` (chat only). If the
 change reaches a screen or a route, look at it in the running app or send it one request, and say
 what came back; no file, no gate. Fix real bugs, then go to PR. The review bot on the PR is the
 backstop.
 
 **S, M/L:** in this order, each step on the code the previous one left.
 
+0. Rebase onto the base branch and bring the test environment up to date with it (dependencies,
+   schema). Every later step runs on that `HEAD`; a rebase after them makes their results stale.
 1. `check_proofs.py <feature>` green at `HEAD`.
-2. `/code-review medium`, no `--comment`, no `--fix`. Use `high` only for money, auth, migrations or
+2. If the diff changes something many callers share (an error handler, a serializer, middleware, a
+   response shape), search the whole test suite for what callers observe (an error code, a field name,
+   a message) and run every file that matches. The frozen checks cover only the tests the plan named.
+3. `/code-review medium`, no `--comment`, no `--fix`. Use `high` only for money, auth, migrations or
    data. Fix real bugs, ask before committing.
-3. `the-judge` over the local branch, chat only. There is no PR yet: replace its Step 0 `gh` calls with
+4. `the-judge` over the local branch, chat only. There is no PR yet: replace its Step 0 `gh` calls with
    `git diff <base>...HEAD` and treat it as round 1. Skip its Gate and Post steps. Its findings never
    go on any PR, not even later; it is the user's private check.
-4. One `ship:verifier` subagent at the same `HEAD`. Brief: the goal, the feature, the diff range, the
+5. One `ship:verifier` subagent at the same `HEAD`. Brief: the goal, the feature, the diff range, the
    absolute path of `<skills>/tlc-spec-lean`, and the judge's findings as claims with evidence pointers (not the
    judge's reasoning). Dispatch it only once `**Walked:**` is written; the walk is the author's evidence, so the verifier
    still reads the claims and proofs, not the Handoff.
    Record it on `checks.md`'s `**Dispatched:**` line first. If a criterion cites a
    capture, tlc-spec-lean's screens subagent runs beside it; no other subagents.
-5. Spot-check any new evidence the verifier cites, then fix what it CONFIRMED and what it found, in
+6. Spot-check any new evidence the verifier cites, then fix what it CONFIRMED and what it found, in
    commits. Report the judge result and the verifier's verdict table together.
-6. If a fix changed behaviour, run `check_proofs.py` again and one more verifier round scoped to the
+7. If a fix changed behaviour, run `check_proofs.py` again and one more verifier round scoped to the
    new commits. Two rounds at most, unless a remaining gap can reach a user; a surviving mutant on a
    path no user reaches is a note, not a failure.
-7. `validate_verification.py <feature>` exits 0. Open the report with its last line; a red gate is said
+8. `validate_verification.py <feature>` exits 0. Open the report with its last line; a red gate is said
    first.
 
-If the change is security work and the project defines a security gate skill, run it after step 7;
+If the change is security work and the project defines a security gate skill, run it after step 8;
 its NO-GO stops the PR.
 
 ## 5. PR (stop before push)
@@ -162,6 +170,10 @@ Ask before `git push`. Then:
   review-bot trigger comment, post it; otherwise skip this step.
 - The Testing section is click-through steps for the reviewing developer, not a list of automated tests.
   Write it from `**Walked:**`: the same steps and requests, with what the reviewer should see.
+
+List follow-ups (out-of-scope findings, residual risks) in the final report. Raise them in the tracker
+only after the user agrees, and never add scope to a ticket that is already in review, test or done:
+use an open ticket or a new one.
 
 Then ask once whether to write a `## Handoff` into `.specs/STATE.md` (PR state, pending reviews, flaky
 tests, next step).
