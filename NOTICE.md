@@ -36,15 +36,12 @@ does not apply to them.
 ## pstack principles
 
 - **Path:** `skills/sail/references/principles/`
-- **Author:** Lauren Tan, pstack 0.15.36, https://github.com/cursor/plugins/tree/main/pstack
+- **Author:** Lauren Tan, pstack 0.15.44, https://github.com/cursor/plugins/tree/main/pstack
 - **License:** MIT, copy in `skills/sail/references/principles/LICENSE`
 - **Files:** `model-the-domain`, `laziness-protocol`, `subtract-before-you-add`, `fix-root-causes`,
   `test-behavior-not-implementation`, `prove-it-works`, `attack-the-premise`, `boundary-discipline`,
   each from pstack's `principle-<name>` skill.
-- **Changes:** YAML frontmatter removed, since they are read as references, not skills. In
-  `prove-it-works`, the line pointing to pstack's Claude Code adapter is removed. In
-  `attack-the-premise`, links to bundled principles point at their files here, and links to
-  principles not bundled (Build the Lever, Redesign from First Principles) became plain names. Text
+- **Changes:** YAML frontmatter removed, since they are read as references, not skills. Text
   otherwise unchanged.
 - **Also adapted, no files:** from pstack's poteto-mode, rewritten in `skills/sail/SKILL.md`: the
   goal-first restatement, the evidence-labelled reply style, naming the principle that changed a
