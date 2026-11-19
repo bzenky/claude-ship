@@ -1,12 +1,10 @@
 """
-lean_config.py - what a feature's artifacts say the Verifier owes, read the same way by every gate.
+lean_config.py - how plan.md says a source binds, and what it says the build owes a live walk.
 
-Three facts decide it: whether the feature has a screen (the screen comparison and the walk), which
-routes plan.md's `## Surface` adds or changes (a live probe each), and whether plan.md's `## Sources`
-marks a source binding (the binding-source comparison). The shape of a `Run` group and
-of a proof that reads one lives here too. validate_checks.py, validate_verification.py and
-check_proofs.py act on these, so they live in one place - two copies of the same rule drift until
-one gate demands what the other does not.
+validate_plan.py reads whether plan.md's `## Sources` marks a source binding from here.
+check_commit.py reads whether the feature owes a live walk - a screen a person reaches, or a route
+`## Surface` adds or changes - and whether the `**Walked:**` line records one. The proof helpers
+serve the sibling skills that ship this same file; this skill has no checks.md since 3.0.0.
 
 Every function takes lines already stripped of fenced blocks.
 """
@@ -28,6 +26,7 @@ SCREEN_NOUN_RE = re.compile(r"\b(?:page|screen|modal|dialog|button|dropdown|tool
 ROUTE_RE = re.compile(r"(/[A-Za-z0-9_\-/:{}.]*)")
 GRAPHQL_OP_RE = re.compile(r"\b(?:query|mutation|subscription)\s+`?([A-Za-z_]\w*)", re.IGNORECASE)
 PLACEHOLDER_RE = re.compile(r"^\s*[\[<].+[\]>]\s*$")
+WALKED_RE = re.compile(r"^\**\s*Walked\s*:?\s*\**\s*:?\s*", re.IGNORECASE)
 PROOF_RE = re.compile(r"^\**\s*Proof\s*\**\s*:\s*`?browser\b", re.IGNORECASE)
 CRITERION_RE = re.compile(r"^\s*\d+\.\s+(.*)$")
 APPROVED_RE = re.compile(
@@ -96,6 +95,11 @@ def plan_owes_pictures(plan_lines, checks_lines=()):
     return any(PROOF_RE.match(s.strip()) for s in checks_lines)
 
 
+def plan_marks_binding(plan_lines):
+    """True when plan.md's `## Sources` marks a source binding (the binding-source comparison runs)."""
+    return any(BINDING_RE.search(s) and not NOT_BINDING_RE.search(s) for s in _section(plan_lines, "Sources"))
+
+
 def plan_routes(plan_lines):
     """Each route plan.md's `## Surface` table names: the GraphQL operation when the row names one,
     since every operation shares one path, else the path."""
@@ -113,12 +117,19 @@ def plan_routes(plan_lines):
     return routes
 
 
-def plan_owes_walk(plan_lines, checks_lines=()):
+def plan_owes_walk(plan_lines):
     """True when green tests are not enough: a person reaches a screen, or a caller reaches a route.
     The author then opens the running app or probes the running service and logs it on `**Walked:**`."""
-    return plan_has_screen(plan_lines, checks_lines) or bool(plan_routes(plan_lines))
+    return plan_has_screen(plan_lines) or bool(plan_routes(plan_lines))
 
 
-def plan_marks_binding(plan_lines):
-    """True when plan.md's `## Sources` marks a source binding (the binding-source comparison runs)."""
-    return any(BINDING_RE.search(s) and not NOT_BINDING_RE.search(s) for s in _section(plan_lines, "Sources"))
+def walked(lines):
+    """True when a `**Walked:**` line records a visit: not empty, not the template's placeholder."""
+    for s in lines:
+        m = WALKED_RE.match(s.strip())
+        if not m:
+            continue
+        t = s.strip()[m.end():].strip(" *")
+        if t and not t.startswith(("<", "[")) and t.lower().rstrip(".") not in ("none", "n/a", "-", "tbd"):
+            return True
+    return False

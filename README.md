@@ -6,15 +6,15 @@ A Claude Code plugin that takes one change, from a ticket or a plain request, to
 stops where a human has to decide and an independent check before anything is called done.
 
 > **An experiment.** `ship` is my test of merging two skills I already rely on, tlc-spec-lean
-> (plan, checks, proofs) and the-judge (evidence-first review), into one flow, guided by principles
+> (plan, build, a fresh reviewer) and the-judge (evidence-first review), into one flow, guided by principles
 > borrowed from pstack's poteto-mode (goal first, lean code, prove it works, evidence-labelled
 > replies). I think they connect well and fit how I work day to day. It is shaped by that work, not
 > meant as a general tool, and it changes as I learn what holds up. Credit goes to their authors;
 > see [Credits](#credits).
 
 ```
-INTAKE → PLAN → CHECKS → BUILD → VALIDATE → PR
- stop     stop            stop per commit   stop before push
+INTAKE → PLAN → BUILD → VALIDATE → PR
+ stop     stop    stop per commit   stop before push
 ```
 
 ## What's inside
@@ -22,9 +22,9 @@ INTAKE → PLAN → CHECKS → BUILD → VALIDATE → PR
 | Component | Invoke | What it does |
 | --- | --- | --- |
 | `sail` skill | `/ship:sail` | Runs the whole flow for one change |
-| `tlc-spec-lean` skill (bundled) | `/ship:tlc-spec-lean` | Plan, checks, build and proof scripts that `sail` runs |
+| `tlc-spec-lean` skill (bundled) | `/ship:tlc-spec-lean` | Plan, build, the live walk and the fresh reviewer that `sail` runs |
 | `the-judge` skill (bundled) | `/ship:the-judge` | Evidence-first code review that `sail` runs as its last review pass |
-| `verifier` agent | spawned by `sail` | One independent pass at validate time: checks that each test would fail if its claim were false, and tries to refute the code review's findings |
+| `verifier` agent | spawned by `sail` | Tries to refute the-judge's findings with evidence and mutations, then hunts the diff for missed blockers |
 
 ## How `sail` works
 
@@ -34,18 +34,20 @@ for the full ceremony:
 | Size | When | Plan | Validate |
 | --- | --- | --- | --- |
 | XS | config, copy, a one-liner | the goal statement | project tests for touched files + `/code-review low` |
-| S | roughly under 3 files, no hard-to-reverse decision | short intent + checks | full gate |
+| S | roughly under 3 files, no hard-to-reverse decision | the request and its answers, no plan | full gate |
 | M/L | anything bigger | full plan with criteria | full gate |
 
 **The full gate**, in order, each step on the code the previous one left:
 
-0. The change has run live during the build: each screen opened and used, and each added or
-   changed route probed against the local app as an allowed and a refused caller.
-1. Every check's proof passes at `HEAD` (tlc-spec-lean's `check_proofs.py`).
-2. `/code-review medium` for correctness bugs (`high` for money, auth, migrations, data).
-3. `the-judge` over the local branch, results in chat only, never posted.
-4. One `ship:verifier` subagent does tlc-spec-lean's Verifier round and refutes the judge's findings.
-5. Fixes, then at most one more scoped verifier round, then `validate_verification.py` exits 0.
+0. Rebase onto the base branch. The change has run live during the build: each screen opened and
+   used, and each added or changed route probed against the local app as an allowed and a refused
+   caller, on the `**Walked:**` line.
+1. Tests that observe shared output run when the diff changes something many callers share.
+2. tlc-spec-lean's review: a fresh sub-agent with its fixed prompt, then one fix pass.
+3. `/code-review medium` for correctness bugs (`high` for money, auth, migrations, data).
+4. `the-judge` over the local branch, results in chat only, never posted.
+5. One `ship:verifier` subagent refutes the judge's findings and hunts for missed blockers.
+6. Fixes, then at most one more scoped verifier round; the repo's test, build and lint commands pass.
 
 **Habits it holds in every stage:**
 

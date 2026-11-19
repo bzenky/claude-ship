@@ -116,7 +116,7 @@ CASES = [
      1, "names no status code"),
     ("validate_plan", "plan.md", "check ids written into Surface before checks exist",
      lambda s: s.replace("anything else gets `401` |", "anything else gets `401` | C7, C8, C9 |"),
-     1, "does not exist yet"),
+     1, "Surface names a check id"),
     ("validate_plan", "plan.md", "a restricted Surface route with no status for the callers it refuses",
      lambda s: s.replace("| `200`, `401`, `409`, `422` |", "| `200`, `409`, `422` |"),
      1, "names no code for the rest"),
@@ -129,23 +129,9 @@ CASES = [
          "3. `Billing::StatusMap` (new) - provider status -> local status",
          "3. `Billing::StatusMapFactory` - provider status -> local status"),
      0, "without marking it as existing or as a"),
-    ("validate_checks", "plan.md", "a route reviewed in the plan that no check mentions",
+    ("validate_checks", "plan.md", "a route reviewed in the plan that no check mentions (warn)",
      lambda s: s.replace("`POST /webhooks/provider`", "`POST /webhooks/provider/v2`"),
-     1, "owe a Coverage row, or the route is dead"),
-    ("validate_checks", "checks.md", "a Surface route no walk proof probes",
-     lambda s: s.replace("Proof: walk - probe `POST /webhooks/provider` signed and unsigned against the local server",
-                         'Proof: `bin/rails test test/webhooks/ingest_test.rb -n "/signed_and_unsigned/"`'),
-     1, "no `walk` proof probes it"),
-    ("validate_checks", "plan.md", "a GraphQL operation in Surface no walk proof probes",
-     lambda s: s.replace("anything else gets `401` |\n",
-                         "anything else gets `401` |\n| `POST /graphql` mutation `pauseSubscription` | `id` | `{status}` | `200`, `403` | the owner; anyone else gets `403` |\n", 1),
-     1, "names `pauseSubscription` but no `walk` proof probes it"),
-    ("validate_verification", "checks.md", "a route in the plan and no Walked line",
-     lambda s: without_probe(s),
-     1, "the plan names a screen or a route but `## Handoff` has no `**Walked:**` line"),
-    ("validate_verification", "checks.md", "a Walked line left as the template placeholder",
-     lambda s: re.sub(r"- \*\*Walked:\*\*[^\n]*", "- **Walked:** <what you did, what came back>", s),
-     1, "is empty or a placeholder"),
+     0, "owe a Coverage row, or the route is dead"),
 
     ("validate_plan", "plan.md", "acceptance criterion with no SHALL",
      lambda s: s.replace("THEN the system SHALL set the subscription status", "THEN we set the subscription status"),
@@ -294,24 +280,6 @@ def with_walk_proof(s):
     return s.replace("\n## Coverage", "\nProof: walk - open Items from the nav\n\n## Coverage", 1)
 
 
-def without_walked(s):
-    return re.sub(r"\n- \*\*Walked:\*\*[^\n]*\n", "\n", s)
-
-
-def without_probe(s):
-    """checks.md with no route probe and no walk: the shape of a backend-only feature."""
-    s = re.sub(r"\n\*\*C13\*\*[^\n]*\nProof: walk[^\n]*\n", "\n", s)
-    return without_walked(s)
-
-
-def without_surface(s):
-    return re.sub(r"## Surface\n.*?\n## Landing", "## Surface\n\nNone - nothing consumed outside\n\n## Landing",
-                  s, flags=re.S)
-
-
-GESTURE_AC = "8. WHEN a member clicks Retry payment THEN the system SHALL charge the card again\n"
-
-
 def with_walked(s):
     return s.replace("## Handoff\n", "## Handoff\n\n- **Walked:** opened Items from the nav, the list showed\n", 1)
 
@@ -388,16 +356,8 @@ MULTI_CASES = [
       "captures/billing--card-form.jpg": lambda s: "jpg", "screens.md": screens_md("matches")},
      1, "has no `billing--card-form.running.png`"),
     ("validate_verification", "a walk proof with no Walked line in the Handoff",
-     {"checks.md": lambda s: with_walk_proof(without_walked(s))},
+     {"checks.md": with_walk_proof},
      1, "no `**Walked:**` line"),
-    ("validate_verification", "a gesture criterion with no capture and no Walked line",
-     {"plan.md": lambda s: without_surface(s).replace(LAST_AC, LAST_AC + GESTURE_AC, 1), "checks.md": without_probe},
-     1, "the plan names a screen or a route but `## Handoff` has no `**Walked:**` line"),
-    ("validate_verification", "a criterion naming a modal and no Walked line",
-     {"plan.md": lambda s: without_surface(s).replace(
-         LAST_AC, LAST_AC + "8. IF the charge fails again THEN the system SHALL keep the modal with `Card declined`\n", 1),
-      "checks.md": without_probe},
-     1, "the plan names a screen or a route but `## Handoff` has no `**Walked:**` line"),
     ("validate_verification", "screens.md with no Round line",
      judged_capture("**HEAD**: 0a1b2c3\n"),
      1, "no `**Round**:` line"),
@@ -506,10 +466,6 @@ NEGATIVE_CONTROLS = [
       "checks.md": with_browser_shot("screens/billing.running.png"), RUNNING: lambda s: "png"}),
     ("validate_verification", "a screen judged in screens.md is accepted",
      {"plan.md": with_screen, "screens.md": screens_md("matches"), RUNNING: lambda s: "png"}),
-    ("validate_verification", "a backend change with no route and no screen owes no walk",
-     {"plan.md": without_surface, "checks.md": without_probe}),
-    ("validate_checks", "a plan with no route owes no probe",
-     {"plan.md": without_surface, "checks.md": without_probe}),
     ("validate_checks", "a walk proof needs no test selector and no picture",
      {"checks.md": with_walk_proof}, "names no test selector"),
     ("validate_verification", "a walk proof with its visit in the Walked line is accepted",
@@ -560,10 +516,122 @@ TOOLING = [
      ["feat: Suspend the subscription"], 1, "start lowercase"),
     ("check_commit.py", "an unknown type fails",
      ["wip: suspend the subscription"], 1, "is not one of"),
+    ("check_commit.py", "a description ending in a period fails",
+     ["fix: stop the double charge."], 1, "end with a period"),
+    ("check_commit.py", "a breaking marker without its footer fails",
+     ["feat!: drop the legacy plan ids"], 1, "BREAKING CHANGE"),
+    ("check_commit.py", "an agent trailer fails",
+     ["fix: stop the double charge\n\nCo-Authored-By: An Agent <agent@example.com>"], 1, "agent trailer"),
+    ("check_commit.py", "an agent trailer the repo asks for passes with --allow-trailers",
+     ["fix: stop the double charge\n\nCo-Authored-By: An Agent <agent@example.com>", "--allow-trailers"],
+     0, "OK"),
+    ("check_commit.py", "the message as --message passes",
+     ["--message", "docs(billing): note the grace period"], 0, "OK"),
     ("lessons.py", "normalization regressions pass", ["selftest"], 0, "ok"),
     ("lessons.py", "--root before the subcommand is the documented form",
      ["--root", tempfile.gettempdir(), "list", "--status", "confirmed"], 0, ""),
 ]
+
+
+def run_commit_followups():
+    """check_commit.py after an OK: untracked files, and send / wait / fix / report from plan.md or request.md."""
+    ok = True
+    root = tempfile.mkdtemp(prefix="commit-")
+
+    def git(*cmd):
+        return subprocess.run(["git", *cmd], cwd=root, capture_output=True, text=True).stdout.strip()
+
+    def commit(message):
+        # .specs/ stays untracked, as in a repo that ignores nothing for it: the filter is under test
+        git("add", "-A", "--", ".", ":(exclude).specs")
+        git("-c", "user.email=s@t", "-c", "user.name=selftest", "commit", "-qm", message)
+        return git("rev-parse", "--short", "HEAD")
+
+    def step(desc, present, absent=()):
+        nonlocal ok
+        code, out = run_script("check_commit.py", "fix: stop the double charge", "--root", root)
+        if code == 0 and all(p in out for p in present) and not any(a in out for a in absent):
+            print(f"  ok      check_commit.py: {desc}")
+        else:
+            ok = False
+            print(f"  BROKEN  check_commit.py: {desc} - want {present!r} and none of {absent!r}, "
+                  f"got exit={code}: {out.strip()[:400]}")
+
+    send, wait, fix, report = "send the review", "wait for it", "one fix pass after review.md", "the report"
+    walk, late = "write the `**Walked:**` line", "with no `**Walked:**` line"
+    try:
+        fdir = os.path.join(root, ".specs", "features", FEATURE)
+        os.makedirs(fdir)
+        plan = read_artifact(os.path.join(FIXTURES, "plan.md"))
+        git("init", "-q")
+        write_artifact(os.path.join(root, ".gitignore"), "ignored/\n")
+        write_artifact(os.path.join(root, "app.ts"), "export const charge = 1\n")
+        base = commit("feat: charge once")
+
+        write_artifact(os.path.join(fdir, "plan.md"), plan.replace("**Approved**:", "**Pending**:", 1))
+        step("a plan not yet approved owes no build step", [], [send, wait, fix, report])
+
+        write_artifact(os.path.join(fdir, "plan.md"), plan)
+        step("an approved plan with a Surface route and no Walked line is told to probe it first",
+             [walk, "probe `/webhooks/provider`"], [send, wait, fix])
+
+        write_artifact(os.path.join(fdir, "plan.md"), plan.replace("\n", "\n**Walked:** <what you did>\n", 1))
+        step("a placeholder Walked line is no walk", [walk], [send])
+
+        unwalked_review = plan.replace("\n", f"\n**Review:** sent at {base}\n", 1)
+        write_artifact(os.path.join(fdir, "plan.md"), unwalked_review)
+        step("a review sent before the walk is flagged, and still waited for", [late, wait], [send, walk])
+
+        walked_plan = plan.replace("\n", "\n**Walked:** POST /webhooks/provider signed: 200; unsigned: 401\n", 1)
+        write_artifact(os.path.join(fdir, "plan.md"), walked_plan)
+        step("a walked plan with no Review line is told to send the review", [send], [walk, wait, fix])
+
+        reviewed = walked_plan.replace("\n", f"\n**Review:** sent at {base}\n", 1)
+        write_artifact(os.path.join(fdir, "plan.md"), reviewed)
+        step("a sent review with no review.md is waited for", [wait], [send, fix, late])
+
+        write_artifact(os.path.join(fdir, "review.md"), "# Billing review\n\nVerdict: approve.\n")
+        step("review.md with no Fix pass line is the fix pass", [fix, "in plan.md"], [send, wait])
+
+        write_artifact(os.path.join(root, "app.ts"), "export const charge = 2\n")
+        commit("fix: charge in cents")
+        step("a code commit alone does not close the fix pass", [fix], [report, send, wait])
+
+        closed = reviewed.replace("\n", "\n**Fix pass:** done - no changes needed\n", 1)
+        write_artifact(os.path.join(fdir, "plan.md"), closed)
+        step("a Fix pass line leaves the report, with no code commit after it", [report], [fix, send, wait])
+
+        # A change that skipped the plan: request.md carries the same lines.
+        os.remove(os.path.join(fdir, "plan.md"))
+        os.remove(os.path.join(fdir, "review.md"))
+        request = "# Billing\n\nThe user's request:\n\n> charge once\n"
+        write_artifact(os.path.join(fdir, "request.md"), request)
+        step("request.md with no plan.md and no Review line is told to send the review", [send], [wait, fix])
+
+        write_artifact(os.path.join(fdir, "request.md"), request + f"\n**Review:** sent at {base}\n")
+        write_artifact(os.path.join(fdir, "review.md"), "# Billing review\n\nVerdict: approve.\n")
+        step("a reviewed request.md is the fix pass, written in request.md", [fix, "in request.md"],
+             [send, wait, report])
+
+        write_artifact(os.path.join(fdir, "request.md"),
+                       request + f"\n**Review:** sent at {base}\n**Fix pass:** done - no changes needed\n")
+        step("a Fix pass line in request.md leaves the report", [report], [fix, send, wait])
+
+        os.makedirs(os.path.join(root, ".specs", "features", "draft"))
+        write_artifact(os.path.join(root, ".specs", "features", "draft", "request.md"), request)
+        write_artifact(os.path.join(root, ".specs", "features", "draft", "plan.md"),
+                       plan.replace("**Approved**:", "**Pending**:", 1))
+        step("a request.md beside an unapproved plan.md owes no build step", [report], ["`draft`"])
+
+        os.makedirs(os.path.join(root, ".playwright-mcp"))
+        write_artifact(os.path.join(root, ".playwright-mcp", "page.png"), "x")
+        os.makedirs(os.path.join(root, "ignored"))
+        write_artifact(os.path.join(root, "ignored", "trace.zip"), "x")
+        step("an untracked tool output is named, an ignored one and .specs/ are not",
+             ["Untracked, in no commit: .playwright-mcp/"], ["ignored/", ".specs/"])
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+    return ok
 
 
 def run_tooling():
@@ -586,26 +654,10 @@ def run_tooling():
               f"got exit={code}")
         print("          " + out.strip().replace("\n", "\n          "))
 
-    # A passing commit names what follows the build of a feature whose verification is still owed.
-    root = tempfile.mkdtemp(prefix="commit-")
-    try:
-        fdir = os.path.join(root, ".specs", "features", FEATURE)
-        os.makedirs(fdir)
-        write_artifact(os.path.join(fdir, "checks.md"), "# Billing checks\n\n## Checks\n")
-        for desc, verified, want in [] if not shipped("check_commit") else [
-            ("an unverified feature is told what follows its last commit", False, True),
-            ("a verified feature is not", True, False),
-        ]:
-            if verified:
-                write_artifact(os.path.join(fdir, "verification.md"), "# Billing verification\n")
-            code, out = run_script("check_commit.py", "feat: suspend the subscription", "--root", root)
-            if code == 0 and ("check_proofs.py billing" in out) == want:
-                print(f"  ok      check_commit.py: {desc}")
-            else:
-                ok = False
-                print(f"  BROKEN  check_commit.py: {desc} - exit {code}: {out.strip()[:300]}")
-    finally:
-        shutil.rmtree(root, ignore_errors=True)
+    # A passing commit names what the run still owes: an untracked file no commit carries, and the
+    # next step the plan's lines show. Each step is a control for the others: one message, not all.
+    if shipped("check_commit") and shutil.which("git"):
+        ok = run_commit_followups() and ok
 
     # Before building, the Build line runs once: a command red before any change is not the gate.
     for desc, build, argv, want_code, want_frag in [] if not shipped("validate_checks") else [
@@ -947,4 +999,8 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
+    # Windows writes piped output in the ANSI code page, which cannot encode every character a plan holds.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     raise SystemExit(main())

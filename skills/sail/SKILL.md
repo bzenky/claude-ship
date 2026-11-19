@@ -1,6 +1,6 @@
 ---
 name: sail
-description: 'Takes one change, from a ticket or a plain request, to an open draft PR: size it, plan, freeze checks, build, validate (code-review, the-judge, one independent verifier), then open the PR. Runs tlc-spec-lean for plan/checks/build/proofs and the-judge for review; adds goal restatement, lean-code principles and evidence-labelled replies. Use when the user says "sail", "/ship:sail", "take this ticket to a PR", "build this and open a PR", "plan, build, validate and open the PR", or hands over a ticket or a feature/fix request to deliver end to end in an existing repo. Do NOT use for reviewing someone else''s PR (use the-judge), for babysitting an open PR, for a design doc, or for a throwaway prototype or a brand-new project that will not end in a PR.'
+description: 'Takes one change, from a ticket or a plain request, to an open draft PR: size it, plan, build, validate (a fresh reviewer, code-review, the-judge, one verifier that refutes the judge), then open the PR. Runs tlc-spec-lean for plan/build/review and the-judge for the last review pass; adds goal restatement, lean-code principles and evidence-labelled replies. Use when the user says "sail", "/ship:sail", "take this ticket to a PR", "build this and open a PR", "plan, build, validate and open the PR", or hands over a ticket or a feature/fix request to deliver end to end in an existing repo. Do NOT use for reviewing someone else''s PR (use the-judge), for babysitting an open PR, for a design doc, or for a throwaway prototype or a brand-new project that will not end in a PR.'
 ---
 
 # Sail
@@ -9,15 +9,16 @@ One change, from a ticket or a plain request, intake to draft PR. Sail owns the 
 belong to the skills it calls, so read them rather than re-deriving them here.
 
 ```
-INTAKE → PLAN → CHECKS → BUILD → VALIDATE → PR
- stop      stop            stop per commit   stop before push
+INTAKE → PLAN → BUILD → VALIDATE → PR
+ stop      stop    stop per commit   stop before push
 ```
 
 ## Precedence
 
 The project's `CLAUDE.md` and the user's memory win over Sail: PR title format, PR template, branch
 names, commit style, review-bot comments, attribution lines. Sail wins over the defaults of the skills
-it calls where it says so below (the-judge never posts; one merged verifier). tlc-spec-lean's own rules
+it calls where it says so below (the-judge never posts; fixes from the passes after tlc-spec-lean's
+review are allowed). tlc-spec-lean's own rules
 hold everywhere else.
 
 ## Bundled skills
@@ -30,7 +31,7 @@ differently.
 
 | Skill | Used for |
 | --- | --- |
-| `<skills>/tlc-spec-lean` | plan, checks, build, proof scripts (`scripts/`), the Verifier's reference (`references/verify.md`) |
+| `<skills>/tlc-spec-lean` | plan, build, the walk, the fresh reviewer (`references/review.md`), `check_commit.py` |
 | `<skills>/the-judge` | the last review pass, chat only |
 | `/code-review` (built in) | correctness pass before the judge |
 
@@ -92,39 +93,41 @@ user a check you could run yourself.
 | Size | When | Plan artifact | Validate |
 | --- | --- | --- | --- |
 | **XS** | config, copy, a one-liner, no new branch of behaviour | none, the goal statement is the plan | project tests for touched files + `/code-review low` |
-| **S** | roughly under 3 files, no one-way door | `checks.md` with an `## Intent` paragraph (tlc-spec-lean's short path) | full gate |
+| **S** | roughly under 3 files, no one-way door | `request.md` with the answers, no `plan.md` (tlc-spec-lean's short path) | full gate |
 | **M/L** | anything bigger, or any one-way door | full `plan.md` | full gate |
 
 Write size, base branch and current stage to `.specs/features/<feature>/sail.md` (S and up) as soon as
 they are decided. The chat does not survive a compaction; that file and tlc-spec-lean's files do.
 
-## 1. Plan (stop) and 2. Checks
+## 1. Plan (stop)
 
-Run tlc-spec-lean's Plan and Checks phases as its references say, with these additions:
+Run tlc-spec-lean's Plan phase as its references say (for S, its short path in `request.md`), with
+these additions:
 
 - In the plan, name the data shape and its organising structure before the path.
 - When a question is a fact you could observe by running something (behaviour, output, layout), run a
   throwaway sketch and let the result answer it. Ask the user only for product or preference calls.
   When the change maps another service's response to something the user sees, read what that service
   actually returns at that moment before writing the branch.
-- Propose the trimmed test list with the checks, before writing any test: one proof may settle several
-  checks that share a setup.
+- Propose the trimmed test list with the plan, before writing any test: one test may settle several
+  criteria that share a setup.
 
-XS skips both phases.
+XS skips this phase.
 
-## 3. Build (stop per commit)
+## 2. Build (stop per commit)
 
 Run tlc-spec-lean's Build phase. Ask before every `git commit`; an approved plan authorises edits, not
 commits. Before each commit, strip comments that restate the code: keep only a non-obvious why.
 
-The build is not done until the change has run live: tlc-spec-lean's walk for each screen and probe
-for each route the change adds or changes are on `checks.md`'s `**Walked:**` line (its rule 12 and
-`references/build.md`). Start the app the way the project's `CLAUDE.md` says; if it cannot start, hand
-the user the steps and the exact requests and say so.
+The build is not done until the change has run live: each screen used and each route the change adds
+or changes probed as an allowed and a refused caller, on the `**Walked:**` line (tlc-spec-lean's rule
+8 and `references/build.md`). Start the app the way the project's `CLAUDE.md` says; if it cannot start,
+hand the user the steps and the exact requests and say so on the line. `check_commit.py` names what the
+feature still owes after each commit.
 
-## 4. Validate
+## 3. Validate
 
-**XS:** run the project's tests for the touched files, plus the shared-output search in step 2 below
+**XS:** run the project's tests for the touched files, plus the shared-output search in step 1 below
 if the change touches shared code, then `/code-review low` (chat only). If the
 change reaches a screen or a route, look at it in the running app or send it one request, and say
 what came back; no file, no gate. Fix real bugs, then go to PR. The review bot on the PR is the
@@ -134,33 +137,34 @@ backstop.
 
 0. Rebase onto the base branch and bring the test environment up to date with it (dependencies,
    schema). Every later step runs on that `HEAD`; a rebase after them makes their results stale.
-1. `check_proofs.py <feature>` green at `HEAD`.
-2. If the diff changes something many callers share (an error handler, a serializer, middleware, a
+1. If the diff changes something many callers share (an error handler, a serializer, middleware, a
    response shape), search the whole test suite for what callers observe (an error code, a field name,
-   a message) and run every file that matches. The frozen checks cover only the tests the plan named.
+   a message) and run every file that matches. The plan's tests cover only what the plan named.
+2. tlc-spec-lean's Review, exactly as `references/review.md` says: `**Walked:**` written, the
+   `**Review:**` line, then a fresh sub-agent with its fixed prompt. Add nothing to that prompt, not the
+   goal and not your notes; its independence is the point. Then its one fix pass and the `**Fix pass:**`
+   line, asking before the commit.
 3. `/code-review medium`, no `--comment`, no `--fix`. Use `high` only for money, auth, migrations or
    data. Fix real bugs, ask before committing.
 4. `the-judge` over the local branch, chat only. There is no PR yet: replace its Step 0 `gh` calls with
    `git diff <base>...HEAD` and treat it as round 1. Skip its Gate and Post steps. Its findings never
    go on any PR, not even later; it is the user's private check.
-5. One `ship:verifier` subagent at the same `HEAD`. Brief: the goal, the feature, the diff range, the
-   absolute path of `<skills>/tlc-spec-lean`, and the judge's findings as claims with evidence pointers (not the
-   judge's reasoning). Dispatch it only once `**Walked:**` is written; the walk is the author's evidence, so the verifier
-   still reads the claims and proofs, not the Handoff.
-   Record it on `checks.md`'s `**Dispatched:**` line first. If a criterion cites a
-   capture, tlc-spec-lean's screens subagent runs beside it; no other subagents.
+5. One `ship:verifier` subagent at the same `HEAD`. Brief: the goal, the feature, the diff range, and
+   the judge's findings as claims with evidence pointers (not the judge's reasoning). No other
+   subagents.
 6. Spot-check any new evidence the verifier cites, then fix what it CONFIRMED and what it found, in
    commits. Report the judge result and the verifier's verdict table together.
-7. If a fix changed behaviour, run `check_proofs.py` again and one more verifier round scoped to the
-   new commits. Two rounds at most, unless a remaining gap can reach a user; a surviving mutant on a
-   path no user reaches is a note, not a failure.
-8. `validate_verification.py <feature>` exits 0. Open the report with its last line; a red gate is said
-   first.
+7. If a fix in steps 3-6 changed behaviour, run the project's tests for the touched files and walk or
+   probe again what it touched, adding to `**Walked:**`, then one more verifier round scoped to the new
+   commits. Two rounds at most, unless a remaining gap can reach a user; a surviving mutant on a path no
+   user reaches is a note, not a failure. tlc-spec-lean's review is not sent again.
+8. The repo's own test, build and lint commands pass at `HEAD`, and the last `check_commit.py` names
+   only the report for the feature. Open the report with that; a red command is said first.
 
 If the change is security work and the project defines a security gate skill, run it after step 8;
 its NO-GO stops the PR.
 
-## 5. PR (stop before push)
+## 4. PR (stop before push)
 
 Ask before `git push`. Then:
 
@@ -181,5 +185,6 @@ tests, next step).
 ## Final report
 
 Open with the goal. Then: what changed, the size and why, what ran live (walked, probed, or handed to
-the user), the gate's last line, the judge and verifier verdicts (what was fixed, what was refuted),
+the user), the commands' result at `HEAD`, the reviewer's verdict and what its fix pass changed, the
+judge and verifier verdicts (what was fixed, what was refuted),
 the principles that changed a decision, open decisions, and the PR link. Every claim labelled.

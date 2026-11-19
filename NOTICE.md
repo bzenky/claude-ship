@@ -9,16 +9,18 @@ does not apply to them.
 - **Author:** Tech Leads Club, https://github.com/tech-leads-club. Derived by its authors from
   tlc-spec-driven 3.3.0 (Felipe Rodrigues), tlc-plan and tlc-implement.
 - **Source:** https://github.com/tech-leads-club/agent-skills/tree/main/packages/skills-catalog/skills/%28development%29/tlc-spec-lean
-- **Version bundled:** 2.2.0, changed here and marked `2.2.0-ship.1` (not an upstream release)
+- **Version bundled:** 3.2.0, changed here and marked `3.2.0-ship.1` (not an upstream release)
 - **License:** CC-BY-4.0, https://creativecommons.org/licenses/by/4.0/
 - **Changes:**
   - `disable-model-invocation: true` added to the `SKILL.md` frontmatter, so the bundled copy runs
     only by name or through `/ship:sail`.
-  - A live walk and route probes are required before a change is done: rule 12 in `SKILL.md`, the
-    probe text in `references/build.md`, `checks.md`, `plan.md` and `memory.md`, wider screen
-    detection and `plan_routes` / `plan_owes_walk` in `scripts/lean_config.py`, the probe gate in
-    `scripts/validate_checks.py`, the `**Walked:**` gate in `scripts/validate_verification.py`, and
-    matching fixtures and `scripts/selftest.py` cases.
+  - A live walk and route probes are required before the review is sent: rule 8 and the route
+    clause in rule 4 of `SKILL.md`, the `## Routes` and `## Walked` sections of
+    `references/build.md`, the `**Walked:**` line in `references/plan.md`'s template and the
+    GraphQL row format in its Surface section, the precondition in `references/review.md`, the
+    resume row in `references/memory.md`, wider screen detection and `plan_routes`,
+    `plan_owes_walk` and `walked` in `scripts/lean_config.py`, the walk step in
+    `scripts/check_commit.py`'s next-step output, and matching `scripts/selftest.py` cases.
 
 ## the-judge
 
