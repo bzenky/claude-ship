@@ -213,7 +213,8 @@ backstop.
    commits. Two rounds at most, unless a remaining gap can reach a user; a surviving mutant on a path no
    user reaches is a note, not a failure. tlc-spec-lean's review is not sent again.
 8. The repo's own test, build and lint commands pass at `HEAD`, and the last `check_commit.py` names
-   only the report for the feature. Open the report with that; a red command is said first.
+   only the report for the feature. A red command goes right after the goal in the final report,
+   before anything else.
 
 If the change is security work and the project defines a security gate skill, run it after step 8;
 its NO-GO stops the PR.
