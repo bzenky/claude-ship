@@ -97,7 +97,11 @@ user a check you could run yourself.
 | **M/L** | anything bigger, or any one-way door | full `plan.md` | full gate |
 
 Write size, base branch and current stage to `.specs/features/<feature>/sail.md` (S and up) as soon as
-they are decided. The chat does not survive a compaction; that file and tlc-spec-lean's files do.
+they are decided, and rewrite the stage as each stage and each Validate step starts (for example
+`stage: validate/4-judge`). The chat does not survive a compaction; that file and tlc-spec-lean's files
+do. On resume, `sail.md`'s stage wins over the next step `check_commit.py` or tlc-spec-lean's resume
+table names: once tlc-spec-lean's fix pass is recorded they say only the report remains, while Sail
+still owes Validate steps 3-8.
 
 ## 1. Plan (stop)
 
@@ -137,6 +141,10 @@ backstop.
 
 0. Rebase onto the base branch and bring the test environment up to date with it (dependencies,
    schema). Every later step runs on that `HEAD`; a rebase after them makes their results stale.
+   The walk ran before the rebase: if the rebase resolved a conflict or brought in changes to a
+   screen, route or shared code the walk went through, walk or probe that part again and add it to
+   `**Walked:**`; otherwise write `predates rebase onto <base> at <hash>, nothing it touched changed`
+   on that line.
 1. If the diff changes something many callers share (an error handler, a serializer, middleware, a
    response shape), search the whole test suite for what callers observe (an error code, a field name,
    a message) and run every file that matches. The plan's tests cover only what the plan named.
@@ -144,11 +152,16 @@ backstop.
    `**Review:**` line, then a fresh sub-agent with its fixed prompt. Add nothing to that prompt, not the
    goal and not your notes; its independence is the point. Then its one fix pass and the `**Fix pass:**`
    line, asking before the commit.
-3. `/code-review medium`, no `--comment`, no `--fix`. Use `high` only for money, auth, migrations or
-   data. Fix real bugs, ask before committing.
+3. `/code-review medium <branch>`, no `--comment`, no `--fix`. Use `high` only for money, auth,
+   migrations or data. The tree is clean by now, so its default target, the current diff, may be
+   empty: name the branch, and check that the files it reviewed match
+   `git diff --stat <base>...HEAD`. Fix real bugs, ask before committing.
 4. `the-judge` over the local branch, chat only. There is no PR yet: replace its Step 0 `gh` calls with
-   `git diff <base>...HEAD` and treat it as round 1. Skip its Gate and Post steps. Its findings never
-   go on any PR, not even later; it is the user's private check.
+   `git diff <base>...HEAD` and treat it as round 1. In its Step 1, run the bypass scan as
+   `git diff <base>...HEAD | python3 <skills>/the-judge/scripts/scan_bypasses.py`; its `scripts/`
+   path is relative to the-judge's folder, not the project. Write its summary and findings in the
+   chat only, with no `findings.json` in the repo, and skip its Gate and Post steps. Its findings
+   never go on any PR, not even later; it is the user's private check.
 5. One `ship:verifier` subagent at the same `HEAD`. Brief: the goal, the feature, the diff range, and
    the judge's findings as claims with evidence pointers (not the judge's reasoning). No other
    subagents.
