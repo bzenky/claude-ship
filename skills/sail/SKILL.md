@@ -10,15 +10,44 @@ belong to the skills it calls, so read them rather than re-deriving them here.
 
 ```
 INTAKE → PLAN → BUILD → VALIDATE → PR
- stop      stop    stop per commit   stop before push
+          stop                       stop before push
+          (M/L)
 ```
+
+## Stops
+
+Sail runs on its own recommendations by default. It stops for the user only at:
+
+1. **Plan approval, M/L only**: every product decision and the plan in one message, each decision
+   with its recommendation, so "ok" approves all of it.
+2. **Before `git push`** and opening the draft PR.
+3. **Before writing to the tracker**: creating a follow-up ticket or editing an existing one.
+
+Everywhere else, take the recommendation and keep going: the size, the base branch, reading a
+handoff, an S or XS change's product decisions, each commit, each fix. Write each decision the user
+did not make to `sail.md` as `assumed: <decision> - <why>` in the turn you make it, and list them at
+the top of the final report.
+
+Stop anyway, whatever the mode, when:
+
+- the change needs a one-way door that the user has not approved in a plan: a migration, a change to
+  a public API or a stored shape, deleting or rewriting data;
+- the evidence rules out the change that was asked for;
+- a test, build or lint command was red before the change;
+- two fixes on the same premise have failed the same gate (`attack-the-premise.md`);
+- a product decision is one where a wrong guess costs more than the question, for example two
+  readings of the request that lead to different screens or different stored data.
+
+**`careful`**: when the request says `careful`, or the project's `CLAUDE.md` or the user's memory asks
+for it, every stop comes back: size and base at intake, the plan for S too, and each commit.
 
 ## Precedence
 
 The project's `CLAUDE.md` and the user's memory win over Sail: PR title format, PR template, branch
 names, commit style, review-bot comments, attribution lines. Sail wins over the defaults of the skills
 it calls where it says so below (the-judge never posts; fixes from the passes after tlc-spec-lean's
-review are allowed). tlc-spec-lean's own rules
+review are allowed; for S, a product decision Sail takes on its recommendation is recorded as assumed
+instead of asked, which replaces tlc-spec-lean's rule 1 there). tlc-spec-lean's own rules
 hold everywhere else.
 
 ## Bundled skills
@@ -80,15 +109,18 @@ approach, give your real judgment. Decline or push back when that is true; agree
 label in the same sentence: measured (with the command or file:line), inferred, or guess. Never hand the
 user a check you could run yourself.
 
-## 0. Intake (stop)
+## 0. Intake
 
 1. If the branch or request names a ticket, fetch it (the project's tracker tool) and any business
-   rules the project's `CLAUDE.md` points to. With no ticket, the request is the source: ask only
-   what the plan can't be written without, and name the feature folder after the change.
-2. If `.specs/STATE.md` has a `## Handoff`, name the feature it describes and ask whether to read it.
+   rules the project's `CLAUDE.md` points to. With no ticket, the request is the source; name the
+   feature folder after the change.
+2. If `.specs/STATE.md` has a `## Handoff` for this feature, read it and say so.
 3. Restate the goal (above).
-4. Recommend a size with one line of why, and ask the base branch the PR will target. Ask both in one
-   question; never assume the base, it decides the diff every later stage reads.
+4. Pick the size, with one line of why, and the base branch the PR will target. The base decides the
+   diff every later stage reads: take it from the project's `CLAUDE.md`, else the ticket, else
+   `gh repo view --json defaultBranchRef --jq .defaultBranchRef.name`. State both in the first message
+   with how you got them, so a wrong one is corrected before any work rests on it, and record them as
+   `assumed:`.
 
 | Size | When | Plan artifact | Validate |
 | --- | --- | --- | --- |
@@ -103,14 +135,22 @@ do. On resume, `sail.md`'s stage wins over the next step `check_commit.py` or tl
 table names: once tlc-spec-lean's fix pass is recorded they say only the report remains, while Sail
 still owes Validate steps 3-8.
 
-## 1. Plan (stop)
+## 1. Plan (stop for M/L)
 
 Run tlc-spec-lean's Plan phase as its references say (for S, its short path in `request.md`), with
 these additions:
 
+- M/L: ask the product decisions and present the plan in the same message, each decision with its
+  recommendation, and stop for approval. The `**Approved**:` line quotes the user's words, as
+  tlc-spec-lean's rule 1 says; never fill it on your own.
+- S: write each product decision under the request in `request.md` as
+  `assumed: <decision> - <recommendation and why>`, not as an answer from the user, and build. The
+  reviewer then sees which calls were the user's and which were yours.
+
 - In the plan, name the data shape and its organising structure before the path.
 - When a question is a fact you could observe by running something (behaviour, output, layout), run a
-  throwaway sketch and let the result answer it. Ask the user only for product or preference calls.
+  throwaway sketch and let the result answer it. Only product or preference calls are decisions, as
+  above.
   When the change maps another service's response to something the user sees, read what that service
   actually returns at that moment before writing the branch.
 - Propose the trimmed test list with the plan, before writing any test: one test may settle several
@@ -118,10 +158,11 @@ these additions:
 
 XS skips this phase.
 
-## 2. Build (stop per commit)
+## 2. Build
 
-Run tlc-spec-lean's Build phase. Ask before every `git commit`; an approved plan authorises edits, not
-commits. Before each commit, strip comments that restate the code: keep only a non-obvious why.
+Run tlc-spec-lean's Build phase, committing each slice without asking (its rule 6: an approved plan,
+or for S the recorded request, authorises local commits). Before each commit, strip comments that
+restate the code: keep only a non-obvious why.
 
 The build is not done until the change has run live: each screen used and each route the change adds
 or changes probed as an allowed and a refused caller, on the `**Walked:**` line (tlc-spec-lean's rule
@@ -151,11 +192,11 @@ backstop.
 2. tlc-spec-lean's Review, exactly as `references/review.md` says: `**Walked:**` written, the
    `**Review:**` line, then a fresh sub-agent with its fixed prompt. Add nothing to that prompt, not the
    goal and not your notes; its independence is the point. Then its one fix pass and the `**Fix pass:**`
-   line, asking before the commit.
+   line, and its commit.
 3. `/code-review medium <branch>`, no `--comment`, no `--fix`. Use `high` only for money, auth,
    migrations or data. The tree is clean by now, so its default target, the current diff, may be
    empty: name the branch, and check that the files it reviewed match
-   `git diff --stat <base>...HEAD`. Fix real bugs, ask before committing.
+   `git diff --stat <base>...HEAD`. Fix real bugs, in commits.
 4. `the-judge` over the local branch, chat only. There is no PR yet: replace its Step 0 `gh` calls with
    `git diff <base>...HEAD` and treat it as round 1. In its Step 1, run the bypass scan as
    `git diff <base>...HEAD | python3 <skills>/the-judge/scripts/scan_bypasses.py`; its `scripts/`
@@ -179,7 +220,9 @@ its NO-GO stops the PR.
 
 ## 4. PR (stop before push)
 
-Ask before `git push`. Then:
+Ask before `git push`, in one message with what the user needs to decide it: the Validate results,
+the `assumed:` list from `sail.md`, and the follow-ups you would raise in the tracker, so one answer
+covers the push and the tickets. Then:
 
 - Open the PR **as a draft** against the base from intake, title and body per the project's convention
   and PR template. Fill the template; leave out empty sections and any generated-by footer.
@@ -192,12 +235,12 @@ List follow-ups (out-of-scope findings, residual risks) in the final report. Rai
 only after the user agrees, and never add scope to a ticket that is already in review, test or done:
 use an open ticket or a new one.
 
-Then ask once whether to write a `## Handoff` into `.specs/STATE.md` (PR state, pending reviews, flaky
-tests, next step).
+Then write a `## Handoff` into `.specs/STATE.md` (PR state, pending reviews, flaky tests, next step).
 
 ## Final report
 
-Open with the goal. Then: what changed, the size and why, what ran live (walked, probed, or handed to
+Open with the goal, then the decisions you made for the user: each `assumed:` line from `sail.md`,
+one line each. Then: what changed, the size and why, what ran live (walked, probed, or handed to
 the user), the commands' result at `HEAD`, the reviewer's verdict and what its fix pass changed, the
 judge and verifier verdicts (what was fixed, what was refuted),
 the principles that changed a decision, open decisions, and the PR link. Every claim labelled.

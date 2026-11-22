@@ -14,7 +14,8 @@ stops where a human has to decide and an independent check before anything is ca
 
 ```
 INTAKE → PLAN → BUILD → VALIDATE → PR
- stop     stop    stop per commit   stop before push
+          stop                       stop before push
+          (M/L)
 ```
 
 ## What's inside
@@ -36,6 +37,13 @@ for the full ceremony:
 | XS | config, copy, a one-liner | the goal statement | project tests for touched files + `/code-review low` |
 | S | roughly under 3 files, no hard-to-reverse decision | the request and its answers, no plan | full gate |
 | M/L | anything bigger | full plan with criteria | full gate |
+
+**Few stops.** `sail` takes its own recommendations and keeps going. It stops for you at plan
+approval (M/L only), before the push and draft PR, and before it writes to the tracker. Every call it
+makes for you is recorded as an `assumed:` line in `sail.md`, shown with the push question, and listed
+at the top of the final report. It still stops on a one-way door you didn't approve, evidence against
+the request, a command that was red before the change, or two failed fixes on the same premise. Say
+`careful` in the request to bring every stop back.
 
 **The full gate**, in order, each step on the code the previous one left:
 
