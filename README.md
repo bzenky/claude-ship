@@ -64,7 +64,11 @@ the request, a command that was red before the change, or two failed fixes on th
 - **Lean code.** Name the data shape before the logic, subtract before adding, fix root causes,
   test behaviour rather than implementation, guard at boundaries, attack a premise that keeps
   failing, and prove it works on the real artifact.
-- **Evidence-labelled replies.** Every claim is marked measured, inferred or guess.
+- **Evidence-labelled replies.** Every claim a decision or the report rests on is marked measured,
+  inferred or guess.
+- **State on disk.** Goal, size, base, stage and every `assumed:` call live in
+  `.specs/features/<feature>/sail.md`; `skills/sail/scripts/sail_next.py` reads it back after a
+  compaction and names what the run still owes.
 
 **Your conventions win.** PR title format, PR template, commit style and review-bot comments come
 from the project's `CLAUDE.md` and your Claude Code memory, not from the plugin.
@@ -100,7 +104,7 @@ claude plugin update ship@bzenky
 └── icon.png           # rendered from assets/icon.svg
 agents/verifier.md
 skills/
-├── sail/              # the flow; references/principles/ bundled from pstack, MIT
+├── sail/              # the flow, scripts/sail_next.py; references/principles/ from pstack, MIT
 ├── tlc-spec-lean/     # bundled, CC-BY-4.0, see NOTICE.md
 └── the-judge/         # bundled, CC-BY-4.0, see NOTICE.md
 assets/icon.svg

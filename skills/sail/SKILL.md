@@ -68,12 +68,13 @@ differently.
 
 **Goal first.** Your first message on a change states, in your own words, the user's goal, the problem
 behind it, and the smallest change you expect to meet it. Don't wait for confirmation. If the evidence
-rules out the change that was asked for, show the evidence and stop. Open the final report with the goal
-too, and restate it in every subagent brief, because a subagent that doesn't know the goal optimises
-for its own reading of the task.
+rules out the change that was asked for, show the evidence and stop. Write it as one sentence on
+`sail.md`'s `goal:` line, and from then on quote that line, not your memory of it, at the top of every
+subagent brief and of the final report: a subagent that doesn't know the goal optimises for its own
+reading of the task, and a goal rebuilt after a compaction drifts.
 
 **Lean code.** When one of these situations comes up, read its file in `references/principles/` (beside
-this file) before acting; each is short, and the bullets below are only their gist.
+this file) before acting. Each is short; the table names when, the file says what.
 
 | Situation | File |
 | --- | --- |
@@ -86,28 +87,17 @@ this file) before acting; each is short, and the bullets below are only their gi
 | a second fix on the same premise has failed the same gate | `attack-the-premise.md` |
 | about to call a step done or say something works | `prove-it-works.md` |
 
-- Name the data shape before writing logic. Encode the domain in a structure (a table or registry, a
-  state machine, a typed model) instead of conditionals scattered across files.
-- Subtract before you add. Delete dead weight first; the smallest change that meets the criteria wins.
-- Fix root causes. Trace a symptom to the first place the system went wrong. A guard is a fix only when
-  the state it handles is legitimate.
-- Test behaviour, not implementation. Assert what a user of the code can observe, so the test fails
-  when that breaks and survives a refactor. Shared behaviour is tested once at its own layer; each
-  host gets one wiring test.
-- Guard at the boundary. Validate where data enters the system, trust it inside, keep logic pure.
-- Attack the premise. After two failed fixes that assume the same thing, write that assumption down and
-  test it before a third.
-- Prove it works on the real artifact: run it, read the actual value. Not a proxy, not "it compiles".
-
 When a principle changed a decision, name it and the choice it changed, in the reply that reports that
 decision. Cite only files you read in this session.
 
 **No is an acceptable answer.** Asked whether to do something, invited to add scope, or shown an
 approach, give your real judgment. Decline or push back when that is true; agreement is not the default.
 
-**Evidence-labelled replies.** Short declarative sentences. Every claim carries its evidence or its
-label in the same sentence: measured (with the command or file:line), inferred, or guess. Never hand the
-user a check you could run yourself.
+**Evidence-labelled replies.** Short declarative sentences. A claim that a decision, a stop or the
+final report rests on (it works, it is fixed, it is safe, this caused that) carries its evidence or its
+label in the same sentence: measured (with the command or file:line), inferred, or guess. Progress
+lines (`step 3 started`, `committed abc1234`) need none. Never hand the user a check you could run
+yourself.
 
 ## 0. Intake
 
@@ -128,12 +118,24 @@ user a check you could run yourself.
 | **S** | roughly under 3 files, no one-way door | `request.md` with the answers, no `plan.md` (tlc-spec-lean's short path) | full gate |
 | **M/L** | anything bigger, or any one-way door | full `plan.md` | full gate |
 
-Write size, base branch and current stage to `.specs/features/<feature>/sail.md` (S and up) as soon as
-they are decided, and rewrite the stage as each stage and each Validate step starts (for example
-`stage: validate/4-judge`). The chat does not survive a compaction; that file and tlc-spec-lean's files
-do. On resume, `sail.md`'s stage wins over the next step `check_commit.py` or tlc-spec-lean's resume
-table names: once tlc-spec-lean's fix pass is recorded they say only the report remains, while Sail
-still owes Validate steps 3-8.
+Write `.specs/features/<feature>/sail.md` for every size, XS included, as soon as these are decided,
+one `key: value` per line:
+
+```
+goal: <the goal, one sentence>
+size: S
+base: main
+stage: intake
+assumed: base main - CLAUDE.md names it
+```
+
+Rewrite the `stage:` line as each stage and each Validate step starts (for example
+`stage: validate/4-judge`, `done` after the report). The chat does not survive a compaction; that file
+and tlc-spec-lean's files do. On resume and at each stage change, run
+`python3 <skills>/sail/scripts/sail_next.py` from the project root. It prints the goal, what the current
+stage owes, the stage after it, and through Validate step 2 tlc-spec-lean's own next step. Follow it
+over `check_commit.py`'s closing line, which stops at tlc-spec-lean's report while Sail still owes
+Validate 3-8 and the PR. It exits 1 on a missing field or an unknown stage; fix `sail.md` first.
 
 ## 1. Plan (stop for M/L)
 
@@ -203,9 +205,16 @@ backstop.
    path is relative to the-judge's folder, not the project. Write its summary and findings in the
    chat only, with no `findings.json` in the repo, and skip its Gate and Post steps. Its findings
    never go on any PR, not even later; it is the user's private check.
-5. One `ship:verifier` subagent at the same `HEAD`. Brief: the goal, the feature, the diff range, and
-   the judge's findings as claims with evidence pointers (not the judge's reasoning). No other
-   subagents.
+5. One `ship:verifier` subagent at the same `HEAD`, no other subagents. Its brief is this template
+   and nothing else: no summary of the build, no judge reasoning, no hint of where to look.
+
+   ```
+   Goal: <sail.md's goal: line, verbatim>
+   Feature: .specs/features/<feature>/   Repo: <path>   Diff: <base>...<HEAD short hash>
+   Judge findings:
+   | ID | claim | file:line |
+   | J1 | <the claim in one sentence> | <where> |
+   ```
 6. Spot-check any new evidence the verifier cites, then fix what it CONFIRMED and what it found, in
    commits. Report the judge result and the verifier's verdict table together.
 7. If a fix in steps 3-6 changed behaviour, run the project's tests for the touched files and walk or
